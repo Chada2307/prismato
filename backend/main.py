@@ -23,7 +23,7 @@ def get_advanced_metadata(path):
     try:
         with ExifToolHelper() as et:
             metadata = et.get_metadata(path)[0]
-
+            
             date_str = metadata.get('EXIF:DateTimeOriginal') or metadata.get('IPTC:DateCreated')
             captured_at = None
             if date_str:
