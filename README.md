@@ -5,4 +5,4 @@ An self-hosted intelligent photo management system featuring automatic metadata 
 * **Backend:** FastAPI (Python 3.11)
 * **Database:** PostgreSQL + pgvector 
 * **Data Extraction:** PyExifTool, Pillow
-* **Frontend:** Svelte
+* **Frontend:** Svelte 5
