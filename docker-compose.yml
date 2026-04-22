@@ -1,7 +1,7 @@
 services:
   db:
     image: ankane/pgvector:v0.5.1
-    container_name: photo_db
+    container_name: prismato_db
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -14,10 +14,10 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - photo-network
-  
+
   backend:
     build: ./backend
-    container_name: photo_backend
+    container_name: prismato_backend
     volumes:
       - ./backend:/app
       - ./storage:/app/storage
@@ -31,22 +31,21 @@ services:
       - db
     networks:
       - photo-network
-  
+
   frontend:
     build: ./frontend
-    container_name: photo_frontend
+    container_name: prismato_frontend
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:8080
     ports:
-     - "5173:5173"
+      - "5173:5173"
     networks:
-     - photo-network
+      - photo-network
     depends_on:
-     - backend
-
+      - backend
 
 networks:
   photo-network:
