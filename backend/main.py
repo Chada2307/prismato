@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException
+from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Path
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from PIL import Image
@@ -25,8 +26,13 @@ app.add_middleware(
 )
 
 UPLOAD_DIR = "storage"
-if not os.path.exists(UPLOAD_DIR):
+THUMBS_DIR = os.path.join(UPLOAD_DIR, "thumbnails")
+
+if not os.path.exists(UPLOAD_DIR) :
     os.makedirs(UPLOAD_DIR)
+
+if not os.path.exists(THUMBS_DIR):
+    os.makedirs(THUMBS_DIR)
 
 def get_advanced_metadata(path):
     try:
@@ -62,15 +68,23 @@ def get_exif_date(path):
         print(f"Blad exif: {e}")
     return None
 
+def get_thumbnail(in_path, out_path):
+        image = Image.open(in_path)
+        image.thumbnail((300,300))
+        image.save(out_path)
 
 @app.post("/upload/")
 async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
     file_extension = file.filename.split(".")[-1]
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
+    thumb_path = os.path.join(THUMBS_DIR, unique_filename)
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+        
+    get_thumbnail(file_path, thumb_path)
+        
 
     test_user = db.query(model.User).first()
     if not test_user:
@@ -85,6 +99,7 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         owner_id = test_user.id,
         file_path = file_path,
         file_size = os.path.getsize(file_path),
+        thumbnail_path = thumb_path,
         captured_at = date_taken,
         latitude = lat,
         longitude = lon,
@@ -102,6 +117,21 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         "path": file_path,
         "captured_at": date_taken
     }
+
+@app.get("/photos/{photo_id}")
+async def get_photo( photo_id: uuid.UUID = Path(...), db: Session = Depends(get_db)):
+
+    photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
+
+    if not photo:
+        raise HTTPException(status_code=404, detail="photo not found")
+    
+    if not os.path.exists(photo.file_path):
+        raise HTTPException(status_code=404, detail="photo file directory missing")
+    
+    return FileResponse(photo.file_path)
+
+
 
 
 
