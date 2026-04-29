@@ -40,7 +40,7 @@
 </script>
 
 <div class="mb-6 text-left">
-	<label class="mb-2 block text-sm font-bold text-gray-700" for="Photo"> Zdjęcie profilowe </label>
+	<label class="mb-2 block text-sm font-bold text-gray-700" for="Photo"> Photo </label>
 
 	<div
 		role="button"
@@ -63,7 +63,7 @@
 					class="mb-4 max-h-48 rounded-lg object-cover shadow-sm"
 				/>
 				<p class="text-sm font-medium text-gray-600">{selectedFile?.name}</p>
-				<p class="mt-1 text-xs text-gray-400">Kliknij, aby zmienić zdjęcie</p>
+				<p class="mt-1 text-xs text-gray-400">Click to change photo</p>
 			</div>
 		{:else}
 			<div class="text-gray-500">
@@ -80,8 +80,8 @@
 						d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
 					></path>
 				</svg>
-				<p class="font-medium text-gray-700">Przeciągnij i upuść zdjęcie tutaj</p>
-				<p class="mt-1 text-sm">lub kliknij, aby wybrać z dysku</p>
+				<p class="font-medium text-gray-700">Drag and drop photo here</p>
+				<p class="mt-1 text-sm">or click to choose file from the disk</p>
 			</div>
 		{/if}
 	</div>

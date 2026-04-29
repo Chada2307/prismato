@@ -1,9 +1,5 @@
 <script lang="ts">
-	import DragAndDrop from './DragAndDrop.svelte';
-	import { createCounter } from './counter.svelte';
-	let name: string = $state('ziomek');
-
-	const counter = createCounter();
+	import DragAndDrop from '../../routes/(app)/dashboard/DragAndDrop.svelte';
 
 	let responseMessage: string = $state('');
 	let isLoading: boolean = $state(false);
@@ -35,22 +31,6 @@
 </script>
 
 <div class="mx-auto mt-10 max-w-lg rounded-xl bg-gray-50 p-8 text-center shadow-md">
-	<h1 class="mb-6 text-3xl font-bold text-blue-600">
-		Witaj, {name}!
-	</h1>
-
-	<div class="mb-6 text-left">
-		<label for="nameInput" class="mb-2 block text-sm font-bold text-gray-700">
-			Jak masz na imię?
-		</label>
-		<input
-			id="nameInput"
-			type="text"
-			bind:value={name}
-			placeholder="Wpisz swoje imię..."
-			class="w-full appearance-none rounded border px-3 py-2 text-gray-700 shadow focus:ring-2 focus:ring-blue-500 focus:outline-none"
-		/>
-	</div>
 	<DragAndDrop onFileDropped={handleImage} />
 	{#if responseMessage}
 		<p
@@ -64,21 +44,4 @@
 			{responseMessage}
 		</p>
 	{/if}
-
-	<p class="mb-6 text-gray-700">
-		Licznik wynosi: <strong class="text-xl">{counter.value}</strong>
-	</p>
-
-	<button
-		onclick={counter.increment}
-		class="rounded bg-blue-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-blue-600"
-	>
-		Zwiększ licznik
-	</button>
-	<button
-		onclick={counter.decrement}
-		class="rounded bg-blue-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-blue-600"
-	>
-		zmniejsz licznik
-	</button>
 </div>

@@ -1,2 +1,15 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+@theme {
+	--color-main-bg: #f7fff7;
+	--color-dark-text: #343434;
+	--color-brand: #489fb5;
+	--color-brand-light: #6dbbc8;
+	--color-danger: #da3e52;
+	--color-warning: #ffa62b;
+
+	--font-inter: 'Inter', sans-serif;
+
+	--radius-prismato: 12px;
+}
