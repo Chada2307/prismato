@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Path
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from PIL import Image
+from PIL import Image, ImageOps
 from PIL.ExifTags import TAGS
 from datetime import datetime
 from exiftool import ExifToolHelper
@@ -72,8 +72,11 @@ def get_exif_date(path):
 
 def get_thumbnail(in_path, out_path):
         image = Image.open(in_path)
-        image.thumbnail((300,300))
-        image.save(out_path)
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+
+        image = ImageOps.fit(image, (600, 600), Image.Resampling.LANCZOS)
+        image.save(out_path, format="WEBP", quality=80)
 
 @app.post("/upload/")
 async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
