@@ -11,6 +11,8 @@ import uuid
 import os
 from database import get_db, engine
 import model
+from schema import PhotoResponse
+from typing import List
 
 
 model.Base.metadata.create_all(bind=engine)
@@ -118,8 +120,8 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         "captured_at": date_taken
     }
 
-@app.get("/photos/{photo_id}")
-async def get_photo( photo_id: uuid.UUID = Path(...), db: Session = Depends(get_db)):
+@app.get("/photos/{photo_id}/original")
+async def get_original_photo( photo_id: uuid.UUID = Path(...), db: Session = Depends(get_db)):
 
     photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
 
@@ -131,7 +133,40 @@ async def get_photo( photo_id: uuid.UUID = Path(...), db: Session = Depends(get_
     
     return FileResponse(photo.file_path)
 
+@app.get("/photos/{photo_id}/thumbnail") ## DONT REPEAT YOURSELF?
+async def get_thumbnail_photo( photo_id: uuid.UUID = Path(...), db: Session = Depends(get_db)):
 
+    photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
+
+    if not photo:
+        raise HTTPException(status_code=404, detail="photo not found")
+    
+    if not os.path.exists(photo.file_path):
+        raise HTTPException(status_code=404, detail="thumbnail file directory missing")
+    
+    return FileResponse(photo.file_path)
+
+
+
+@app.get("/photos/", response_model=List[PhotoResponse])
+def get_photos_list(
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db)
+):
+    photos = db.query(model.Photo).offset(skip).limit(limit).all()
+    result =[]
+    for photo in photos:
+        result.append({
+            "id": photo.id,
+            "captured_at": photo.captured_at,
+            "camera_model": photo.camera_model,
+            "thumbnail_url": f"/photos/{photo.id}/thumbnail",
+            "original_url": f"/photos/{photo.id}/original",
+        })
+            
+        
+    return result
 
 
 

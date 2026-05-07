@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric
+
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from database import Base
@@ -26,3 +27,4 @@ class Photo(Base):
     exif_raw = Column(JSONB)
 
     owner = relationship("User")
+
