@@ -6,6 +6,12 @@
 
 	let fileInput: HTMLInputElement;
 
+	export function reset(){
+		selectedFile = null;
+		imagePreview = null;	
+		if(fileInput) fileInput.value = '';
+	}
+
 	function handleDragOver(e: DragEvent): void {
 		e.preventDefault();
 		isDragging = true;

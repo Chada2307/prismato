@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Image, Search, Map, Heart, Folder, Trash, Upload } from 'lucide-svelte';
 	import { page } from '$app/state';
-	import Modal from '$lib/components/Model.svelte';
+	import Model from '$lib/components/Model.svelte';
 	import UploadCard from '$lib/components/UploadCard.svelte';
 	let { children } = $props();
 
-	let showModal = $state(false);
+	let isModalOpen = $state(false);
 </script>
 
 <div class="flex h-screen overflow-hidden bg-main-bg font-['Inter']">
@@ -92,7 +92,7 @@
 
 			<div class="flex items-center gap-6">
 				<button
-					onclick={() => (showModal = true)}
+					onclick={() => (isModalOpen = true)}
 					class="flex h-10 items-center justify-center gap-2 rounded-lg bg-main-bg px-4 font-medium text-dark-text transition-colors hover:bg-white hover:text-brand hover:ring-2 hover:ring-white"
 				>
 					<span><Upload size={24} /></span> upload
@@ -111,4 +111,6 @@
 		</main>
 	</div>
 </div>
-<Modal bind:showModal />
+<Model bind:showModal={isModalOpen}>
+    <UploadCard />
+</Model>
