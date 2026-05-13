@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Heart, Trash } from 'lucide-svelte';
+	import { Heart, Trash, Loader2 } from 'lucide-svelte';
+  import { invalidateAll } from '$app/navigation';
 
-	let { title, date, size, thumbnail_url, captured_at, camera_model } = $props<{
+	let { id, title, date, size, thumbnail_url, captured_at, camera_model } = $props<{
+    id: string;
 		title: string;
 		date: string;
 		size: string;
@@ -10,6 +12,31 @@
 		camera_model: string;
 
 	}>();
+  let isDeleting = $state(false);
+  
+  async function handleDelete(e:Event) {
+    e.stopPropagation();
+    if(!confirm('Czy na pewno chcesz usunac to zdjecie?')) return;
+
+    isDeleting = true;
+
+    try{
+      const res = await fetch(`http://localhost:8000/photos/${id}`,{
+        method: 'DELETE',
+      });
+      if(res.ok){
+        await invalidateAll();
+      } else{
+        alert('Nie udalo sie usunac zdjecia');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('blad polaczenia z serwerem');
+    
+    } finally {
+      isDeleting = false;
+    }
+  }
 
 	const BASE_URL = 'http://localhost:8000';
 	const fullImageUrl = thumbnail_url.startsWith('http')? thumbnail_url : `${BASE_URL}${thumbnail_url}`;
@@ -36,8 +63,16 @@
       <button class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white backdrop-blur-md hover:bg-brand">
         <Heart size={18} />
       </button>
-      <button class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white backdrop-blur-md hover:bg-danger">
-        <Trash size={18} />
+      <button
+        onclick={handleDelete}
+        disabled={isDeleting} 
+        class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white backdrop-blur-md hover:bg-danger">
+        
+        {#if isDeleting}
+            <Loader2 size={18} class="animate-spin" />
+          {:else}
+          <Trash size={18}/>
+        {/if}
       </button>
     </div>
   </div>

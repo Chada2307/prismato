@@ -168,9 +168,27 @@ def get_photos_list(
             "original_url": f"/photos/{photo.id}/original",
         })
             
-        
     return result
 
+@app.delete("/photos/{photo_id}")
+async def delete_photo(photo_id: uuid.UUID, db: Session = Depends(get_db)):
+    photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
+
+    if not photo:
+        raise HTTPException(status_code = 404, detail="photo not found")
+    paths_to_delete = [photo.file_path, photo.thumbnail_path]
+
+    for path in paths_to_delete:
+        try:
+            if path and os.exists(path):
+                os.remove(path)
+        except Exception as e:
+            print(f"couldnt delete file {path}: {e}")
+
+    db.delete(photo)
+    db.commit()
+
+    return {"message": f"Photo {photo_id} and its thumbnails have been deleted"}
 
 
 @app.get("/")

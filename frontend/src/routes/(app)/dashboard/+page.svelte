@@ -44,6 +44,7 @@
   <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
     {#each data.photos as photo (photo.id)}
       <PhotoCard 
+	  	id={photo.id}
         thumbnail_url={photo.thumbnail_url}
         captured_at={photo.captured_at}
         camera_model={photo.camera_model}
