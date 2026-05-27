@@ -57,7 +57,6 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         
     get_thumbnail(file_path, thumb_path)
         
-
     test_user = db.query(models.User).first()
     if not test_user:
         test_user = models.User(username="test_user", passwd_hash="dummy")

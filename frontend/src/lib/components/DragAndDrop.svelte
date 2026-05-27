@@ -1,15 +1,19 @@
 <script lang="ts">
-	let { onFileDropped } = $props<{ onFileDropped: (file: File) => void }>();
+	import { files } from '$service-worker';
+	import { url } from 'inspector';
+
+	let { onFilesDropped } = $props<{ onFilesDropped: (file: File[]) => void }>();
 	let isDragging: boolean = $state(false);
-	let imagePreview: string | null = $state(null);
-	let selectedFile: File | null = $state(null);
+	let imagePreviews: string[] = $state([]);
+	let selectedFiles: File[] = $state([]);
 
 	let fileInput: HTMLInputElement;
 
-	export function reset(){
-		selectedFile = null;
-		imagePreview = null;	
-		if(fileInput) fileInput.value = '';
+	export function reset() {
+		imagePreviews.forEach((url) => URL.revokeObjectURL(url));
+		selectedFiles = [];
+		imagePreviews = [];
+		if (fileInput) fileInput.value = '';
 	}
 
 	function handleDragOver(e: DragEvent): void {
@@ -23,24 +27,26 @@
 		e.preventDefault();
 		isDragging = false;
 		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-			processFile(e.dataTransfer.files[0]);
+			processFiles(Array.from(e.dataTransfer.files));
 		}
 	}
 	function handleFileSelect(e: Event): void {
 		const target = e.target as HTMLInputElement;
 		if (target.files && target.files.length > 0) {
-			processFile(target.files[0]);
+			processFiles(Array.from(target.files));
 		}
 	}
-	function processFile(file: File): void {
-		if (file.type.startsWith('image/')) {
-			selectedFile = file;
-			imagePreview = URL.createObjectURL(file);
-			if (onFileDropped) {
-				onFileDropped(file);
+	function processFiles(files: File[]): void {
+		const validFiles = files.filter((file) => file.type.startsWith('image/'));
+
+		if (validFiles.length > 0) {
+			selectedFiles = validFiles;
+			imagePreviews = validFiles.map((file) => URL.createObjectURL(file));
+			if (onFilesDropped) {
+				onFilesDropped(validFiles);
 			}
 		} else {
-			alert('podaj zdjecie');
+			alert('Wybierz tylko pliki graficzne');
 		}
 	}
 </script>
@@ -61,15 +67,17 @@
 			? 'scale-[1.02] border-blue-500 bg-blue-50'
 			: 'border-gray-300 bg-white hover:bg-gray-50'}"
 	>
-		{#if imagePreview}
+		{#if imagePreviews.length > 0}
 			<div class="flex flex-col items-center">
 				<img
-					src={imagePreview}
+					src={imagePreviews[0]}
 					alt="Podgląd"
 					class="mb-4 max-h-48 rounded-lg object-cover shadow-sm"
 				/>
-				<p class="text-sm font-medium text-gray-600">{selectedFile?.name}</p>
-				<p class="mt-1 text-xs text-gray-400">Click to change photo</p>
+				<p class="text-sm font-medium text-gray-600">Wybrano plików: {selectedFiles.length}</p>
+				{#if selectedFiles.length > 1}
+					<p class="text-xs text-gray-500">(+{selectedFiles.length - 1} innych)</p>
+				{/if}
 			</div>
 		{:else}
 			<div class="text-gray-500">
@@ -96,6 +104,7 @@
 		bind:this={fileInput}
 		type="file"
 		accept="image/*"
+		multiple
 		class="hidden"
 		onchange={handleFileSelect}
 	/>
