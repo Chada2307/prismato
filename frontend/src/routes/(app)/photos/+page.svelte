@@ -3,9 +3,16 @@
 	import PhotoCard from '$lib/components/PhotoCard.svelte';
 	import { Loader2 } from 'lucide-svelte';
 
+	type Photo = {
+		id: string;
+		thumbnail_url: string;
+		captured_at: string;
+		camera_model: string;
+	};
+
 	let { data } = $props();
 
-	let photos = $state(data.photos);
+	let photos = $state<Photo[]>(data.photos);
 
 	let offset = $state(20);
 	let isLoadingMore = $state(false);
@@ -40,7 +47,8 @@
 	async function moveToTrash(photoId: string) {
 		const res = await fetch(`http://localhost:8000/photos/${photoId}`, { method: 'DELETE' });
 		if (res.ok) {
-			photos = photos.filter((photo) => photo.id);
+			photos = photos.filter((photo) => photo.id !== photoId);
+			offset -= 1;
 		} else {
 			alert('Nie udało sie przenieść do kosza');
 			throw new Error('błąd');
