@@ -24,7 +24,7 @@ if not os.path.exists(UPLOAD_DIR) :
 if not os.path.exists(THUMBS_DIR):
     os.makedirs(THUMBS_DIR)
 
-@router.get("/", response_model=List[PhotoResponse])
+@router.get("", response_model=List[PhotoResponse])
 def get_photos_list(
     skip: int = 0,
     limit: int = 20,
