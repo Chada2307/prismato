@@ -16,11 +16,9 @@
 
 		<nav class="flex flex-col gap-3 px-3">
 			<a
-				href="/dashboard"
+				href="/photos"
 				class="flex items-center gap-4 rounded-lg px-4 py-2.5 text-white transition-colors hover:bg-white/10 hover:text-brand
-				{page.url.pathname === '/dashboard'
-					? 'bg-cyan-600/50 text-white'
-					: 'bg-dark-text hover:text-white'}"
+				{page.url.pathname === '/photos' ? 'bg-cyan-600/50 text-white' : 'bg-dark-text hover:text-white'}"
 			>
 				<span class="text-lg"><Image size={24} /></span>
 				<span class="text-base font-normal">photos</span>
@@ -93,7 +91,7 @@
 			<div class="flex items-center gap-6">
 				<button
 					onclick={() => (isModalOpen = true)}
-					class="flex h-10 items-center justify-center gap-2 rounded-lg bg-main-bg px-4 font-medium text-dark-text transition-colors hover:bg-white hover:text-brand hover:ring-2 hover:ring-white"
+					class="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-main-bg px-4 font-medium text-dark-text transition-colors hover:bg-white hover:text-brand hover:ring-2 hover:ring-white"
 				>
 					<span><Upload size={24} /></span> upload
 				</button>
@@ -112,5 +110,5 @@
 	</div>
 </div>
 <Model bind:showModal={isModalOpen}>
-    <UploadCard />
+	<UploadCard />
 </Model>

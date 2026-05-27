@@ -194,7 +194,7 @@ def get_photos_list(
     return result
 
 
-@app.delete("trash/{photo_id}")
+@app.delete("/photo/{photo_id}")
 async def move_to_trash(photo_id: uuid.UUID, db: Session = Depends(get_db)):
     photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
 
@@ -209,7 +209,7 @@ async def move_to_trash(photo_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Photo {photo_id} moved to trash"}
 
-@app.delete("/photos/{photo_id}")
+@app.delete("/trash/{photo_id}")
 async def delete_photo(photo_id: uuid.UUID, db: Session = Depends(get_db)):
     photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
 

@@ -12,7 +12,7 @@
 		await new Promise((resolve) => setTimeout(resolve, 800));
 
 		if (username === 'admin' && password === 'admin') {
-			goto('/dashboard');
+			goto('/photos');
 		} else {
 			alert('Błędne dane! Użyj admin / admin');
 			isLoading = false;
