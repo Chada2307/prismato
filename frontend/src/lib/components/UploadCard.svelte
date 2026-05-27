@@ -6,31 +6,45 @@
 	let isLoading: boolean = $state(false);
 	let dropzone: ReturnType<typeof DragAndDrop>;
 
-	async function handleImage(file: File) {
+	async function handleImages(files: File[]) {
 		isLoading = true;
-		responseMessage = 'Wysyłanie pliku...';
 
-		const formData = new FormData();
-		formData.append('file', file);
+		let sucessCount = 0;
+		let errorCount = 0;
+
+		for (let i = 0; i < files.length; i++) {
+			responseMessage = `Wysyłanie pliku: ${i + 1} z ${files.length}...`;
+			const formData = new FormData();
+			formData.append('file', files[i]);
+
+			try {
+				const res = await fetch('http://localhost:8000/photos/upload/', {
+					method: 'POST',
+					body: formData
+				});
+
+				if (res.ok) {
+					sucessCount++;
+					responseMessage = `Sukces! Zdjęcie dodane.`;
+				} else {
+					errorCount++;
+					responseMessage = `Błąd: Coś poszło nie tak`;
+				}
+			} catch (error) {
+				console.error(error);
+				errorCount++;
+			}
+		}
 
 		try {
-			const res = await fetch('http://localhost:8000/photos/upload/', {
-				method: 'POST',
-				body: formData
-			});
+			await invalidateAll();
+			if (dropzone) dropzone.reset();
 
-			if (res.ok) {
-				await invalidateAll();
-
-				if (dropzone) dropzone.reset();
-
-				responseMessage = `Sukces! Zdjęcie dodane.`;
+			if (errorCount === 0) {
+				responseMessage = `Sukces. Dodano ${sucessCount} zdjęć`;
 			} else {
-				responseMessage = `Błąd: Coś poszło nie tak`;
+				responseMessage = `Zakończono. Dodano: ${sucessCount}, Błędy: ${errorCount}`;
 			}
-		} catch (error) {
-			console.error(error);
-			responseMessage = 'Błąd po stronie serwera';
 		} finally {
 			isLoading = false;
 		}
@@ -38,7 +52,7 @@
 </script>
 
 <div class="w-full text-center">
-	<DragAndDrop bind:this={dropzone} onFileDropped={handleImage} />
+	<DragAndDrop bind:this={dropzone} onFilesDropped={handleImages} />
 
 	{#if responseMessage}
 		<p

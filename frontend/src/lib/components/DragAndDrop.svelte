@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { files } from '$service-worker';
-	import { url } from 'inspector';
-
 	let { onFilesDropped } = $props<{ onFilesDropped: (file: File[]) => void }>();
 	let isDragging: boolean = $state(false);
 	let imagePreviews: string[] = $state([]);
