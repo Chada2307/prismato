@@ -5,7 +5,7 @@
 	let { data } = $props();
 
 	async function moveToTrash(photoId: string) {
-		const res = await fetch(`http://localhost:8000/photo/${photoId}`, { method: 'DELETE' });
+		const res = await fetch(`http://localhost:8000/photos/${photoId}`, { method: 'DELETE' });
 		if (res.ok) {
 			await invalidateAll();
 		} else {
