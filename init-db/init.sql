@@ -17,6 +17,8 @@ CREATE TABLE photos (
     camera_model varchar(100),
     latitude numeric(9,6),
     longitude numeric(9,6),
+    is_deleted boolean DEFAULT false,
+    deleted_at timestamp,
     exif_raw jsonb
 );
 

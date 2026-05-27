@@ -157,7 +157,9 @@ def get_photos_list(
     limit: int = 20,
     db: Session = Depends(get_db)
 ):
-    photos = db.query(model.Photo).offset(skip).limit(limit).all()
+    photos = db.query(model.Photo)\
+        .filter(model.Photo.is_deleted == False)\
+        .offset(skip).limit(limit).all()
     result =[]
     for photo in photos:
         result.append({
@@ -169,6 +171,43 @@ def get_photos_list(
         })
             
     return result
+
+@app.get("/trash/", response_model=List[PhotoResponse])
+def get_photos_list(
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db)
+):
+    photos = db.query(model.Photo)\
+        .filter(model.Photo.is_deleted == True)\
+        .offset(skip).limit(limit).all()
+    result =[]
+    for photo in photos:
+        result.append({
+            "id": photo.id,
+            "captured_at": photo.captured_at,
+            "camera_model": photo.camera_model,
+            "thumbnail_url": f"/photos/{photo.id}/thumbnail",
+            "original_url": f"/photos/{photo.id}/original",
+        })
+            
+    return result
+
+
+@app.delete("trash/{photo_id}")
+async def move_to_trash(photo_id: uuid.UUID, db: Session = Depends(get_db)):
+    photo = db.query(model.Photo).filter(model.Photo.id == photo_id).first()
+
+    if not photo:
+        raise HTTPException(status_code = 404, detail="photo not found")
+    if photo.is_deleted:
+        return {"message": "photo already in trash"}
+    
+    photo.is_deleted = True
+    photo.deleted_at = datetime.now()
+
+    db.commit()
+    return {"message": f"Photo {photo_id} moved to trash"}
 
 @app.delete("/photos/{photo_id}")
 async def delete_photo(photo_id: uuid.UUID, db: Session = Depends(get_db)):

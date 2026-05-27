@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, Boolean
 
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
@@ -25,6 +25,8 @@ class Photo(Base):
     latitude = Column(Numeric(9, 6))
     longitude = Column(Numeric(9, 6))
     exif_raw = Column(JSONB)
+    is_deleted = Column(Boolean, default = False, index=True)
+    deleted_at = Column(DateTime, nullable = True)
 
     owner = relationship("User")
 
