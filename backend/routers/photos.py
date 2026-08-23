@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Path
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import uuid
 import os
 import shutil
@@ -26,14 +26,19 @@ if not os.path.exists(THUMBS_DIR):
 
 @router.get("", response_model=List[PhotoResponse])
 def get_photos_list(
+    favorites: Optional[bool] = False,
     skip: int = 0,
     limit: int = 20,
+    
     db: Session = Depends(get_db)
 ):
-    photos = db.query(models.Photo)\
-        .filter(models.Photo.is_deleted == False)\
-        .offset(skip).limit(limit).all()
+    query  = db.query(models.Photo).filter(models.Photo.is_deleted == False)
+    if favorites:
+        query = query.filter(models.Photo.is_favorite == True)
+
+    photos = query.offset(skip).limit(limit).all()
     result =[]
+
     for photo in photos:
         result.append({
             "id": photo.id,
@@ -41,6 +46,7 @@ def get_photos_list(
             "camera_model": photo.camera_model,
             "thumbnail_url": f"/photos/{photo.id}/thumbnail",
             "original_url": f"/photos/{photo.id}/original",
+            "is_favorite": photo.is_favorite
         })
             
     return result
@@ -115,7 +121,12 @@ async def get_thumbnail_photo( photo_id: uuid.UUID = Path(...), db: Session = De
     
     return FileResponse(photo.file_path)
 
-
+@router.put("/{photo_id}/favorite")
+async def toggle_favorite(photo_id: uuid.UUID, db: Session = Depends(get_db)):
+    photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
+    photo.is_favorite = not photo.is_favorite
+    db.commit()
+    return {"id": photo.id, "is_favorite": photo.is_favorite}
 
 
 @router.delete("/{photo_id}")

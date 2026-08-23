@@ -55,6 +55,24 @@
 		}
 	}
 
+	async function toggleFavorite(photoId: string){
+        try{
+            const res = await fetch(`http://localhost:8000/photos/${photoId}/favorite`, { method: 'PUT'});
+            if (res.ok){
+            const updatedData = await res.json();
+            const index = photos.findIndex(p => p.id === photoId );
+            if ( index !== -1){
+                photos[index].is_favorite = updatedData.is_favorite;
+            }
+        }
+        }catch(err){
+            console.error('blad zmiany ulubionych', err);
+        }
+        
+    }
+
+
+
 	// const gallery = [
 	// 	{
 	// 		date: 'Today',
@@ -98,7 +116,9 @@
 				thumbnail_url={photo.thumbnail_url}
 				captured_at={photo.captured_at}
 				camera_model={photo.camera_model}
+                is_favorite={photo.is_favorite}
 				onDelete={() => moveToTrash(photo.id)}
+                onFavorite={ () => toggleFavorite(photo.id)}
 			/>
 		{/each}
 	</div>

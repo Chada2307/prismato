@@ -18,6 +18,7 @@ CREATE TABLE photos (
     latitude numeric(9,6),
     longitude numeric(9,6),
     is_deleted boolean DEFAULT false,
+    is_favorite boolean DEFAULT false,
     deleted_at timestamp,
     exif_raw jsonb
 );

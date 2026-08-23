@@ -2,15 +2,17 @@
 	import { Heart, Trash, Loader2 } from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
 
-	let { id, title, date, size, thumbnail_url, captured_at, camera_model, onDelete } = $props<{
+	let { id, title, date, size, thumbnail_url, is_favorite, captured_at, camera_model, onDelete, onFavorite } = $props<{
 		id: string;
 		title: string;
 		date: string;
 		size: string;
 		thumbnail_url: string;
 		captured_at: string;
+		is_favorite: boolean;
 		camera_model: string;
 		onDelete: () => Promise<void>;
+		onFavorite: () => Promise<void>;
 	}>();
 	let isDeleting = $state(false);
 
@@ -27,6 +29,15 @@
 			alert('blad polaczenia z serwerem');
 		} finally {
 			isDeleting = false;
+		}
+	}
+	async function handleFavorite(e:Event) {
+		e.stopPropagation();
+		try {
+			await onFavorite();
+		} catch (err) {
+			console.error(err);
+			alert('blad polaczenia z serwerem');
 		}
 	}
 
@@ -58,8 +69,13 @@
 		>
 			<button
 				class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-brand/80 text-white backdrop-blur-md hover:bg-danger"
+				onclick={handleFavorite}
 			>
-				<Heart size={18} />
+				<Heart size={18}
+					fill={is_favorite ? "red" : "none"} 
+            		color={is_favorite ? "red" : "currentColor"}
+				 />
+				
 			</button>
 			<button
 				onclick={handleDelete}

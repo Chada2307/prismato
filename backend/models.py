@@ -26,6 +26,7 @@ class Photo(Base):
     longitude = Column(Numeric(9, 6))
     exif_raw = Column(JSONB)
     is_deleted = Column(Boolean, default = False, index=True)
+    is_favorite = Column(Boolean, default = False, index=True)
     deleted_at = Column(DateTime, nullable = True)
 
     owner = relationship("User")

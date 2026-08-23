@@ -9,6 +9,7 @@ class PhotoResponse(BaseModel):
     camera_model: Optional[str]
     thumbnail_url: str
     original_url: str
+    is_favorite: bool
     
     class Config:
         from_attributes = True
