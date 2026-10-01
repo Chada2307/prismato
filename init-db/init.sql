@@ -37,7 +37,23 @@ CREATE TABLE faces (
     embedding vector(128)
 );
 
+CREATE TABLE IF NOT EXISTS albums (
+    id UUID PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS photo_album(
+    photo_id UUID REFERENCES photos(id) ON DELETE CASCADE,
+    album_id UUID REFERENCES albums(id) ON DELETE CASCADE,
+    PRIMARY KEY (photo_id, album_id)
+);
+
+
+
 CREATE INDEX idx_photos_captured_at ON photos (captured_at DESC);
 CREATE INDEX idx_photos_owner ON photos (owner_id);
 CREATE INDEX idx_faces_photos ON faces (photo_id);
 CREATE INDEX idx_faces_embedding ON faces USING hnsw (embedding vector_cosine_ops);
+
+CREATE INDEX IF NOT EXISTS idx_albums_title ON albums(title);

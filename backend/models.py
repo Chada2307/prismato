@@ -1,10 +1,24 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, Boolean, Table
 
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from database import Base
 import uuid
 import datetime
+
+photo_album_assoc = Table(
+    'photo_album',
+    Base.metadata,
+    Column('photo_id', UUID(as_uuid=True), ForeignKey('photos.id'), primary_key=True),
+    Column('album_id', UUID(as_uuid=True), ForeignKey('albums.id'), primary_key=True)
+)
+
+class Album(Base):
+    __tablename__ = "albums"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    photos = relationship("Photo", secondary=photo_album_assoc, back_populates="albums")
 
 class User(Base):
     __tablename__ = "users"
@@ -30,4 +44,5 @@ class Photo(Base):
     deleted_at = Column(DateTime, nullable = True)
 
     owner = relationship("User")
+    albums = relationship("Album", secondary=photo_album_assoc, back_populates="photos")
 

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from database import get_db, engine
 import models as models
-from routers import photos, trash
+from routers import photos, trash, albums
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -19,6 +19,7 @@ app.add_middleware(
 
 app.include_router(photos.router)
 app.include_router(trash.router)
+app.include_router(albums.router)
 
 UPLOAD_DIR = "storage"
 THUMBS_DIR = os.path.join(UPLOAD_DIR, "thumbnails")
