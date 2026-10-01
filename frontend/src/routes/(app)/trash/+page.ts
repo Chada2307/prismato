@@ -1,9 +1,9 @@
 import type { PageLoad } from './$types';
-
+import { PUBLIC_API_URL } from '$env/static/public';
 export const ssr = false;
 export const load: PageLoad = async ({ fetch }) => {
 	try {
-		const response = await fetch('http://localhost:8000/trash/');
+		const response = await fetch(`${PUBLIC_API_URL}/trash/`);
 
 		if (!response.ok) {
 			throw new Error('blad pobierania z api');

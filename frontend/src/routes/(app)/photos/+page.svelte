@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import PhotoCard from '$lib/components/PhotoCard.svelte';
 	import { Loader2 } from 'lucide-svelte';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	type Photo = {
 		id: string;
@@ -28,7 +29,7 @@
 	async function loadMore() {
 		isLoadingMore = true;
 		try {
-			const res = await fetch(`http://localhost:8000/photos?skip=${offset}&limit=20`);
+			const res = await fetch(`${PUBLIC_API_URL}/photos?skip=${offset}&limit=20`);
 			if (res.ok) {
 				const newPhotos = await res.json();
 				photos.push(...newPhotos);
@@ -45,7 +46,7 @@
 	}
 
 	async function moveToTrash(photoId: string) {
-		const res = await fetch(`http://localhost:8000/photos/${photoId}`, { method: 'DELETE' });
+		const res = await fetch(`${PUBLIC_API_URL}/photos/${photoId}`, { method: 'DELETE' });
 		if (res.ok) {
 			photos = photos.filter((photo) => photo.id !== photoId);
 			offset -= 1;
@@ -57,7 +58,7 @@
 
 	async function toggleFavorite(photoId: string){
         try{
-            const res = await fetch(`http://localhost:8000/photos/${photoId}/favorite`, { method: 'PUT'});
+            const res = await fetch(`${PUBLIC_API_URL}/photos/${photoId}/favorite`, { method: 'PUT'});
             if (res.ok){
             const updatedData = await res.json();
             const index = photos.findIndex(p => p.id === photoId );

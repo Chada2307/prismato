@@ -1,6 +1,6 @@
 <script lang="ts">
 	import PhotoCard from '$lib/components/PhotoCard.svelte';
-
+	import { PUBLIC_API_URL } from '$env/static/public';
 	type Photo = {
 		id: string;
 		thumbnail_url: string;
@@ -26,7 +26,7 @@
 	async function loadMore() {
 		isLoadingMore = true;
 		try {
-			const res = await fetch(`http://localhost:8000/trash?skip=${offset}&limit=20`);
+			const res = await fetch(`${PUBLIC_API_URL}/trash?skip=${offset}&limit=20`);
 			if (res.ok) {
 				const newPhotos = await res.json();
 				photos.push(...newPhotos);
@@ -43,7 +43,7 @@
 	}
 
 	async function hardDelete(photoId: string) {
-		const res = await fetch(`http://localhost:8000/trash/${photoId}`, { method: 'DELETE' });
+		const res = await fetch(`${PUBLIC_API_URL}/trash/${photoId}`, { method: 'DELETE' });
 		if (res.ok) {
 			photos = photos.filter((photo) => photo.id !== photoId);
 			offset -= 1;

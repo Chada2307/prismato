@@ -40,6 +40,7 @@ def get_photos_list(
             "camera_model": photo.camera_model,
             "thumbnail_url": f"/photos/{photo.id}/thumbnail",
             "original_url": f"/photos/{photo.id}/original",
+            "is_favorite": photo.is_favorite,
         })
             
     return result

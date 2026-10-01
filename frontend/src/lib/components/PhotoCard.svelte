@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Heart, Trash, Loader2 } from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	let { id, title, date, size, thumbnail_url, is_favorite, captured_at, camera_model, onDelete, onFavorite } = $props<{
 		id: string;
@@ -41,10 +42,10 @@
 		}
 	}
 
-	const BASE_URL = 'http://localhost:8000';
+
 	const fullImageUrl = thumbnail_url.startsWith('http')
 		? thumbnail_url
-		: `${BASE_URL}${thumbnail_url}`;
+		: `${PUBLIC_API_URL}${thumbnail_url}`;
 
 	const dateFormatted = new Date(captured_at).toLocaleDateString('pl-PL', {
 		day: 'numeric',

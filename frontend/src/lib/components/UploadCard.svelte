@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DragAndDrop from './DragAndDrop.svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { PUBLIC_API_URL } from '$env/static/public';
 
 	let responseMessage: string = $state('');
 	let isLoading: boolean = $state(false);
@@ -18,7 +19,7 @@
 			formData.append('file', files[i]);
 
 			try {
-				const res = await fetch('http://localhost:8000/photos/upload/', {
+				const res = await fetch(`${PUBLIC_API_URL}/photos/upload/`, {
 					method: 'POST',
 					body: formData
 				});
