@@ -48,7 +48,7 @@ def add_photos_to_album(album_id: uuid.UUID, payload: schemas.AlbumAddPhotos, db
         raise HTTPException(status_code=404, details="Nie znaleziono albumu")
 
     photos = db.query(models.Photo).filter(
-        models.Photo.id.in_(payload.photos_ids),
+        models.Photo.id.in_(payload.photo_ids),
         models.Photo.is_deleted == False
     ).all()
 
@@ -63,7 +63,7 @@ def add_photos_to_album(album_id: uuid.UUID, payload: schemas.AlbumAddPhotos, db
     db.commit()
     return {"message": f"pomyslnie dodano {added_count} zdjęć do albumu"}
 
-@router.get("/{albums}/photos")
+@router.get("/{album_id}/photos")
 def get_album_photos(album_id: uuid.UUID, db: Session = Depends(get_db)):
     album = db.query(models.Album).filter(models.Album.id == album_id).first()
     if not album:
@@ -82,3 +82,19 @@ def get_album_photos(album_id: uuid.UUID, db: Session = Depends(get_db)):
             "is_favorite": photo.is_favorite
         })
     return result
+
+@router.get("/{album_id}", response_model=schemas.AlbumResponse)
+def get_album(album_id: uuid.UUID, db: Session = Depends(get_db)):
+    album = db.query(models.Album).filter(models.Album.id == album_id).first()
+    
+    if not album:
+        raise HTTPException(status_code=404, detail="Nie znaleziono albumu")
+        
+    active_photos = [p for p in album.photos if not p.is_deleted]
+
+    return {
+        "id": album.id,
+        "title": album.title,
+        "created_at": album.created_at,
+        "photo_count": len(active_photos)
+    }

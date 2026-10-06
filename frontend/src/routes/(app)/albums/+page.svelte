@@ -1,6 +1,7 @@
 <script lang="ts">
     import { FolderHeart, Plus, Loader2 } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
+    import { invalidate } from '$app/navigation';
 
     let { data } = $props();
     
@@ -26,6 +27,7 @@
          
                 albums = [newAlbum, ...albums];
                 newAlbumTitle = ''; 
+                invalidate('api:albums');
             } else {
                 alert('Nie udało się utworzyć albumu');
             }

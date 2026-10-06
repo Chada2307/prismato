@@ -24,6 +24,7 @@
 - [ ] **Moduł Mapy (`Map`):** Prezentacja zdjęć na mapie kafelkowej (np. Leaflet) w oparciu o współrzędne `latitude` i `longitude`.
 - [ ] **Moduł Albumów (`Albums`):** Tworzenie kolekcji i grupowanie zdjęć.
 - [ ] **Moduł AI / Wektorowy (Detekcja twarzy):** Integracja biblioteki do wektorowania twarzy (128D) i powiązanie z tabelami `faces` i `people` w `pgvector`.
+- [ ] **Własny system alertów i popupów
 
 ---
 

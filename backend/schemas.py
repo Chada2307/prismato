@@ -28,4 +28,4 @@ class AlbumResponse(BaseModel):
         from_attributes = True
 
 class AlbumAddPhotos(BaseModel):
-    photos_ids: List[uuid.UUID]
+    photo_ids: List[uuid.UUID]
