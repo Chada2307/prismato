@@ -12,7 +12,8 @@
         onFavorite, 
         isSelectionMode, 
         isSelected,      
-        onSelect 
+        onSelect,
+        onClickImage, 
     } = $props<{
         id: string;
         thumbnail_url: string;
@@ -24,6 +25,7 @@
         onSelect: () => void;
         onDelete: () => Promise<void>;
         onFavorite: () => Promise<void>;
+        onClickImage?: () => void;
     }>();
     
     let isDeleting = $state(false);
@@ -71,7 +73,17 @@
 <div
     class="group flex cursor-pointer flex-col overflow-hidden rounded-prismato border transition-all hover:shadow-md
            {isSelected ? 'border-brand bg-brand/5 shadow-md ring-2 ring-brand' : 'border-dark-text/5 bg-white shadow-sm'}"
-    onclick={() => { if (isSelectionMode) onSelect(); }}
+        onclick={() => { 
+            console.log("kliklem");
+            if (isSelectionMode){
+                console.log("kliklem nowy modal");
+                onSelect(); 
+            } else if (onClickImage){
+                console.log("kliklem nowy modal");
+                onClickImage();
+            }
+        
+        }}
 >
     <div class="relative aspect-square w-full overflow-hidden bg-zinc-100">
         <img

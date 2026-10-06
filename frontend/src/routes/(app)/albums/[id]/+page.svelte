@@ -2,11 +2,14 @@
     import { PUBLIC_API_URL } from '$env/static/public';
     import PhotoCard from '$lib/components/PhotoCard.svelte';
     import { ArrowLeft, ImageOff } from 'lucide-svelte';
+     import Lightbox from '$lib/components/Lightbox.svelte';
 
     let { data } = $props();
 
     let album = $state(data.album);
     let photos = $state(data.photos);
+    let lightboxIndex = $state<number | null>(null);
+
 
     $effect(() =>{
         album = data.album;
@@ -55,7 +58,6 @@
             </div>
         </header>
 
-        <!-- Siatka ze zdjęciami -->
         {#if photos.length === 0}
             <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-20 text-gray-400">
                 <ImageOff size={48} class="mb-4 opacity-50" />
@@ -64,7 +66,7 @@
             </div>
         {:else}
             <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {#each photos as photo (photo.id)}
+                {#each photos as photo, index (photo.id)}
                     <PhotoCard
                         id={photo.id}
                         thumbnail_url={photo.thumbnail_url}
@@ -78,9 +80,17 @@
                         
                         onDelete={() => moveToTrash(photo.id)}
                         onFavorite={() => toggleFavorite(photo.id)}
+                        onClickImage={() => lightboxIndex = index}
                     />
                 {/each}
             </div>
         {/if}
     </div>
+{/if}
+{#if lightboxIndex !== null}
+    <Lightbox 
+        photos={photos} 
+        initialIndex={lightboxIndex} 
+        onClose={() => lightboxIndex = null} 
+    />
 {/if}

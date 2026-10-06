@@ -3,10 +3,12 @@
     import PhotoCard from '$lib/components/PhotoCard.svelte';
     import { Loader2, FolderHeart, X } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
+    import Lightbox from '$lib/components/Lightbox.svelte';
 
     type Photo = {
         id: string;
         thumbnail_url: string;
+        original_url: string;
         captured_at: string;
         camera_model: string;
         is_favorite: boolean;
@@ -28,6 +30,7 @@
     let showAlbumModal = $state(false);
     let userAlbums = $state<{id: string, title: string}[]>([]);
     let isAddingToAlbum = $state(false);
+    let lightboxIndex = $state<number | null>(null);
 
     $effect(() => {
         photos = data.photos;
@@ -146,7 +149,7 @@
     </header>
 
     <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {#each photos as photo (photo.id)}
+        {#each photos as photo, index (photo.id)}
             <PhotoCard
                 id={photo.id}
                 thumbnail_url={photo.thumbnail_url}
@@ -158,6 +161,7 @@
                 onSelect={() => toggleSelection(photo.id)}
                 onDelete={() => moveToTrash(photo.id)}
                 onFavorite={() => toggleFavorite(photo.id)}
+                onClickImage={() => lightboxIndex = index}
             />
         {/each}
     </div>
@@ -230,7 +234,17 @@
                         {/each}
                     </div>
                 {/if}
+                
             </div>
         </div>
     </div>
 {/if}
+
+{#if lightboxIndex !== null}
+    <Lightbox 
+        photos={photos} 
+        initialIndex={lightboxIndex} 
+        onClose={() => lightboxIndex = null} 
+    />
+{/if}
+
