@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { FolderHeart, Plus, Loader2 } from 'lucide-svelte';
+    import { FolderHeart, Plus, Loader2, Trash2} from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
     import { invalidate } from '$app/navigation';
 
@@ -37,6 +37,27 @@
             isCreating = false;
         }
     }
+
+    async function deleteAlbum(e :Event, id: string) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if(!confirm('Czy na pewno chcesz usunąć ten album? Zdjęcia nie zostaną usunięte :) ')) return;
+
+        try{
+            const res = await fetch(`${PUBLIC_API_URL}/albums/${id}`, { method: 'DELETE' });
+
+            if(res.ok){
+                albums = albums.filter((a: any) => a.id !== id);
+                invalidate('api:albums');
+            }else{
+                alert('Błąd podczas dodawania albumu');
+            }
+        }catch(err){
+            console.error(err);
+        }
+    }
+
 </script>
 
 <div class="flex flex-col gap-8">
@@ -84,6 +105,13 @@
                         <div class="rounded-lg bg-brand/10 p-3 text-brand transition-colors group-hover:bg-brand group-hover:text-white">
                             <FolderHeart size={28} />
                         </div>
+                        <button 
+                            onclick={(e) => deleteAlbum(e, album.id)} 
+                            class="rounded-full p-2 text-gray-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                            title="Usuń album"
+                        >
+                            <Trash2 size={18} />
+                        </button>
                     </div>
                     
                     <div class="flex flex-col">

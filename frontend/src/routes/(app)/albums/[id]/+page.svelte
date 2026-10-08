@@ -1,8 +1,9 @@
 <script lang="ts">
     import { PUBLIC_API_URL } from '$env/static/public';
     import PhotoCard from '$lib/components/PhotoCard.svelte';
-    import { ArrowLeft, ImageOff } from 'lucide-svelte';
-     import Lightbox from '$lib/components/Lightbox.svelte';
+    import { ArrowLeft, ImageOff, Trash2} from 'lucide-svelte';
+    import Lightbox from '$lib/components/Lightbox.svelte';
+    import { goto } from '$app/navigation';
 
     let { data } = $props();
 
@@ -34,6 +35,17 @@
             if(index !== -1) photos[index].is_favorite = updated.is_favorite;
         }
     }
+
+    async function deleteTHISAlbum() {
+        if (!confirm('Czy na pewno chcesz usunąć ten album? - zdjęcia sie nie skasują obiecuje! :) ')) return;
+
+        const res = await fetch(`${PUBLIC_API_URL}/albums/${album.id}`, { method: 'DELETE' });
+        if (res.ok) {
+            goto('/albums');
+        } else {
+            alert('Błąd podczas usuwania albumu');
+        }
+    }
 </script>
 {#if !album}
     <div class="flex h-64 flex-col items-center justify-center text-gray-500">
@@ -50,12 +62,22 @@
                 Wróć do albumów
             </a>
             
+            <div class="flex items-start justify-between">
             <div>
                 <h2 class="text-3xl font-bold text-dark-text">{album.title}</h2>
                 <p class="text-dark-text/60">
                     {album.photo_count} {album.photo_count === 1 ? 'zdjęcie' : 'zdjęć'}
                 </p>
             </div>
+
+            <button 
+                onclick={deleteTHISAlbum} 
+                class="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-100"
+            >
+                <Trash2 size={18} />
+                <span class="hidden sm:inline">Usuń album</span>
+            </button>
+        </div>
         </header>
 
         {#if photos.length === 0}

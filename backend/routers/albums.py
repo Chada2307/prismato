@@ -98,3 +98,15 @@ def get_album(album_id: uuid.UUID, db: Session = Depends(get_db)):
         "created_at": album.created_at,
         "photo_count": len(active_photos)
     }
+
+@router.delete("/{album_id}")
+def delete_album(album_id: uuid.UUID, db: Session = Depends(get_db)):
+    album = db.query(models.Album).filter(models.Album.id == album_id).first()
+
+    if not album:
+        raise HTTPException(status_code=404, detail="Nie znaleziono albumu")
+
+    db.delete(album)
+    db.commit()
+
+    return {"message": "Album został usunięty"}
