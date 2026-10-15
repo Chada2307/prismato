@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Path
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 import uuid
 import os
@@ -92,7 +93,9 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         "message": "zdjecie pomyslnie wgrane",
         "photo_id": new_photo.id,
         "path": file_path,
-        "captured_at": date_taken
+        "captured_at": date_taken,
+        "lat": lat,
+        "lon": lon
     }
 
 @router.get("/{photo_id}/original")
@@ -157,7 +160,17 @@ def get_map_photos(db: Session = Depends(get_db)):
             "id": p.id,
             "lat": p.latitude,
             "lng": p.longitude,
-            "thumbnail_url": p.thumbnail_path
+            "thumbnail_url": p.thumbnail_path,        
         }
         for p in photos
     ]
+
+@router.get("/info")
+def get_info(db: Session = Depends(get_db)):
+    total_count = db.query(func.count(models.Photo.id)).filter(
+        models.Photo.is_deleted == False
+    ).scalar()
+
+    return {
+        "count": total_count
+    }

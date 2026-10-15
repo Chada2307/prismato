@@ -27,8 +27,9 @@
 
                     const imageUrl = photo.thumbnail_url.startsWith('http')
                         ? photo.thumbnail_url
-                        : `${PUBLIC_API_URL}${photo.thumbnail_url}`;
-                    console.log(`${PUBLIC_API_URL}${photo.thumbnail_url}`);
+                        : `${PUBLIC_API_URL}/${photo.thumbnail_url}`;
+                    console.log(`${PUBLIC_API_URL}/${photo.thumbnail_url}`);
+
                     const pinIcon = L.divIcon({
                         className: 'custom-pin',
                     html: `

@@ -17,6 +17,7 @@
     let { data } = $props();
 
     let photos = $state<Photo[]>(data.photos);
+    let count = $state<number | null>(data.info.count);
 
     let offset = $state(20);
     let isLoadingMore = $state(false);
@@ -134,12 +135,25 @@
             console.error('blad zmiany ulubionych', err);
         }
     }
+
+    async function getInfo(){
+        try{
+            const res = await fetch(`${PUBLIC_API_URL}/photos/info`);
+            if (res.ok){
+                const response = await res.json();
+                count = response
+            }
+        }catch(err){
+            console.error('błąd pobrania informacji', err);
+        }
+
+    }
 </script>
 
 <div class="relative flex min-h-screen flex-col gap-8 pb-24">
     <header>
         <h2 class="text-3xl font-bold text-dark-text">Twoja Galeria</h2>
-        <p class="text-dark-text/60">Znaleziono {photos.length} zdjęć</p>
+        <p class="text-dark-text/60">Łącznie zdjęć {count} zdjęć</p>
 		<button 
         onclick={toggleManualSelection}
         class="rounded-lg px-4 py-2 text-sm font-medium transition-colors {isSelectionMode ? 'bg-brand text-white' : 'bg-gray-100 text-dark-text hover:bg-gray-200'}"

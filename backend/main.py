@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 from database import get_db, engine
 import models as models
@@ -37,3 +38,5 @@ def read_root():
         return {"status": "polaczono z baza danych"}
     except Exception as e:
         return {"status": "Blad polaczenia z baza", "error": str(e)}
+
+app.mount("/storage", StaticFiles(directory="storage"), name="storage")

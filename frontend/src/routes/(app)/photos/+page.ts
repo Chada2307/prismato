@@ -10,10 +10,17 @@ export const load: PageLoad = async ({ fetch }) => {
 			throw new Error('blad pobierania z api');
 		}
 
+		const infoResponse = await fetch(`${PUBLIC_API_URL}/photos/info`);
+		if (!infoResponse.ok) {
+			throw new Error('blad pobierania z api');
+		}
+
 		const photos = await response.json();
+		const info = await infoResponse.json();
 
 		return {
-			photos
+			photos,
+			info
 		};
 	} catch (error) {
 		console.error('blad API', error);
