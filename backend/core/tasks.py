@@ -39,7 +39,6 @@ def delete_physical_file_task(file_paths: list):
         if path and os.path.exists(path):
             try:
                 os.remove(path)
-                print(f" proba usuwania pliku {path}: {e}")
                 deleted += 1
             except Exception as e:
                 print(f"Błąd podczas usuwania pliku {path}: {e}")

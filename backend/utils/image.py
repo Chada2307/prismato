@@ -39,10 +39,20 @@ def get_exif_date(path):
         print(f"Blad exif: {e}")
     return None
 
-def get_thumbnail(in_path, out_path):
-        image = Image.open(in_path)
-        if image.mode in ("RGBA", "P"):
-            image = image.convert("RGB")
+def get_thumbnail(file_path: str, thumb_path: str, max_size: tuple = (1080, 1080)):
+        try:
+            with Image.open(file_path) as img:
+                img = ImageOps.exif_transpose(img)
+            
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            img.save(thumb_path, format="WEBP", quality=80, method=4)
 
-        image = ImageOps.fit(image, (600, 600), Image.Resampling.LANCZOS)
-        image.save(out_path, format="WEBP", quality=80)
+            return True
+
+        except Exception as e:
+            print(f"Błąd generowania miniatury: {e}")
+            return False

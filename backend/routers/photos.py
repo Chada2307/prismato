@@ -56,9 +56,12 @@ def get_photos_list(
 @router.post("/upload/")
 async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
     file_extension = file.filename.split(".")[-1]
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    
+    base_uuid = str(uuid.uuid4())
+    unique_filename = f"{base_uuid}.{file_extension}"
+
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
-    thumb_path = os.path.join(THUMBS_DIR, unique_filename)
+    thumb_path = os.path.join(THUMBS_DIR, f"{base_uuid}.webp")
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

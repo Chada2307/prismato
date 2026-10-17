@@ -3,3 +3,4 @@
 - [ ] Kontrolki po wyświetleniu oryginalnego zdjecia
 - [ ] Dodawanie zdjęć bezpośrednio do albumu
 - [ ] dodanie lokalizacji do zdjecia 
+- [ ] nie zapisuje cos lokalizaji ani metadanych po zmianach z 17.10
