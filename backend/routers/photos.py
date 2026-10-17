@@ -11,6 +11,7 @@ import models
 from schemas import PhotoResponse
 from database import get_db
 from utils.image import get_thumbnail, get_advanced_metadata
+from core.tasks import process_photo_task
 
 router = APIRouter(
     prefix="/photos",
@@ -61,9 +62,7 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-        
-    get_thumbnail(file_path, thumb_path)
-        
+                
     test_user = db.query(models.User).first()
     if not test_user:
         test_user = models.User(username="test_user", passwd_hash="dummy")
@@ -71,31 +70,23 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         db.commit()
         db.refresh(test_user)
 
-    date_taken, lat, lon, camera, raw_data = get_advanced_metadata(file_path)
-
     new_photo = models.Photo(
         owner_id = test_user.id,
         file_path = file_path,
         file_size = os.path.getsize(file_path),
         thumbnail_path = thumb_path,
-        captured_at = date_taken,
-        latitude = lat,
-        longitude = lon,
-        camera_model = camera,
-        exif_raw = raw_data
     )
 
     db.add(new_photo)
     db.commit()
     db.refresh(new_photo)
 
+    process_photo_task.delay(new_photo.id, file_path, thumb_path)
+
     return{
-        "message": "zdjecie pomyslnie wgrane",
+        "message": "zdjecie przyjete. przetwarzanie w tle",
         "photo_id": new_photo.id,
-        "path": file_path,
-        "captured_at": date_taken,
-        "lat": lat,
-        "lon": lon
+        "status": "processing"
     }
 
 @router.get("/{photo_id}/original")
