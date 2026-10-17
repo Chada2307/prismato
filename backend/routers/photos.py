@@ -161,6 +161,9 @@ def get_map_photos(db: Session = Depends(get_db)):
             "lat": p.latitude,
             "lng": p.longitude,
             "thumbnail_url": p.thumbnail_path,        
+            "original_url": f"/photos/{p.id}/original",
+            "camera_model": p.camera_model,
+            "captured_at": p.captured_at,
         }
         for p in photos
     ]

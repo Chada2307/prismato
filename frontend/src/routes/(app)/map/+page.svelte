@@ -1,13 +1,17 @@
 <script lang="ts">
 
-    import { onMount } from 'svelte';
+    import { onMount, mount } from 'svelte';
     import 'leaflet/dist/leaflet.css';
     import { PUBLIC_API_URL } from '$env/static/public';
+    import Lightbox from '$lib/components/Lightbox.svelte';
+    import LightboxButton from '$lib/components/LightboxButton.svelte';
 
     let mapElement: HTMLElement;
     let map: any;
     let photos: any[] = $state([]);
     let isLoading = $state(true);
+    let lightboxIndex = $state<number | null>(null);
+
 
     onMount(async () =>{
         const L = (await import('leaflet')).default;
@@ -23,12 +27,11 @@
             if(res.ok){
                 photos = await res.json();
 
-                photos.forEach(photo => {
+                photos.forEach((photo, index) => {
 
                     const imageUrl = photo.thumbnail_url.startsWith('http')
                         ? photo.thumbnail_url
                         : `${PUBLIC_API_URL}/${photo.thumbnail_url}`;
-                    console.log(`${PUBLIC_API_URL}/${photo.thumbnail_url}`);
 
                     const pinIcon = L.divIcon({
                         className: 'custom-pin',
@@ -42,15 +45,31 @@
                     iconAnchor: [18, 36], 
                     popupAnchor: [0, -32] 
                     });
+                    
+                    const popupNode = document.createElement('div');
+                    popupNode.className = "flex w-[180px] flex-col gap-2 p-1";
+                    popupNode.innerHTML = `
+                        <div class="aspect-square w-full overflow-hidden rounded-xl border border-gray-100 shadow-sm bg-gray-50">
+                            <img src="${imageUrl}" class="h-full w-full object-cover" alt="Miniatura" />
+                        </div>
+                    <div class="svelte-btn-container"></div>
+                    `;
+
+                    const btnContainer = popupNode.querySelector('.svelte-btn-container');
+                    if(btnContainer){
+                        mount(LightboxButton, {
+                            target: btnContainer,
+                            props:{ 
+                                onClick: () => {
+                                    lightboxIndex = index;
+                                }                                
+                            }
+                        })
+                    }
 
                     L.marker([photo.lat, photo.lng], { icon: pinIcon })
                      .addTo(map)
-                     .bindPopup(`
-                        <div class="p-1">
-                            <img src="${imageUrl}" class="w-full rounded-md" />
-                            <a href="/photos" class="block mt-2 text-center text-sm font-bold text-brand">Zobacz w galerii</a>
-                        </div>
-                     `);
+                     .bindPopup(popupNode);
                 });
             }
         }catch(err){
@@ -64,7 +83,7 @@
         };
     });
 </script>
-<div class="relative flex h-[calc(100vh-80px)] w-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-zinc-100 shadow-sm">
+<div class="relative flex h-[84vh] w-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-zinc-100 shadow-sm">
     {#if isLoading}
         <div class="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-sm">
             <span class="animate-pulse text-lg font-medium text-brand">Wczytywanie mapy świata...</span>
@@ -73,6 +92,14 @@
 
     <div bind:this={mapElement} class="h-full w-full z-0"></div>
 </div>
+
+ {#if lightboxIndex !== null}
+        <Lightbox 
+            photos={photos} 
+            initialIndex={lightboxIndex} 
+            onClose={() => lightboxIndex = null} 
+        />
+{/if}
 
 <style>
     :global(.leaflet-container img) {

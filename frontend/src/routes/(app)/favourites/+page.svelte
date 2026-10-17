@@ -3,6 +3,7 @@
 	import PhotoCard from '$lib/components/PhotoCard.svelte';
 	import { Loader2 } from 'lucide-svelte';
 	import { PUBLIC_API_URL } from '$env/static/public';
+	import Lightbox from '$lib/components/Lightbox.svelte';
 
 	type Photo = {
 		id: string;
@@ -19,6 +20,7 @@
 	let isLoadingMore = $state(false);
 
 	let hasMore = $state(data.photos.length >= 20);
+	let lightboxIndex = $state<number | null>(null);
 
 	$effect(() => {
 		photos = data.photos;
@@ -76,44 +78,16 @@
         }
     }
 
-	// const gallery = [
-	// 	{
-	// 		date: 'Today',
-	// 		type: [
-	// 			{ title: 'IMG_2026_01.jpg', size: '2.4 MB' },
-	// 			{ title: 'IMG_2026_02.jpg', size: '3.1 MB' },
-	// 			{ title: 'IMG_2026_03.jpg', size: '1.8 MB' },
-	// 			{ title: 'IMG_2026_04.jpg', size: '4.2 MB' },
-	// 			{ title: 'IMG_2026_05.jpg', size: '2.1 MB' },
-	// 			{ title: 'IMG_2026_06.jpg', size: '5.0 MB' }
-	// 		]
-	// 	},
-	// 	{
-	// 		date: 'Yesterday',
-	// 		type: [
-	// 			{ title: 'Wakacje_01.jpg', size: '2.4 MB' },
-	// 			{ title: 'Wakacje_02.jpg', size: '4.1 MB' },
-	// 			{ title: 'Wakacje_03.jpg', size: '1.2 MB' }
-	// 		]
-	// 	},
-	// 	{
-	// 		date: '12 May 2026',
-	// 		photos: [
-	// 			{ title: 'Pies.png', size: '5.0 MB' },
-	// 			{ title: 'Krajobraz.jpg', size: '2.1 MB' }
-	// 		]
-	// 	}
-	// ];
 </script>
 
 <div class="flex flex-col gap-8">
 	<header>
-		<h2 class="text-3xl font-bold text-dark-text">Twoja Galeria</h2>
+		<h2 class="text-3xl font-bold text-dark-text">Ulubione</h2>
 		<p class="text-dark-text/60">Znaleziono {photos.length} zdjęć</p>
 	</header>
 
 	<div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-		{#each photos as photo (photo.id)}
+		{#each photos as photo, index (photo.id)}
 			<PhotoCard
 				id={photo.id}
 				thumbnail_url={photo.thumbnail_url}
@@ -122,6 +96,7 @@
                 is_favorite={photo.is_favorite}
 				onDelete={() => moveToTrash(photo.id)}
                 onFavorite={ () => toggleFavorite(photo.id)}
+				onClickImage={() => lightboxIndex = index}
 			/>
 		{/each}
 	</div>
@@ -147,4 +122,13 @@
 			To już wszystkie zdjęcia w Twojej galerii.
 		</div>
 	{/if}
+
+	{#if lightboxIndex !== null}
+    <Lightbox 
+        photos={photos} 
+        initialIndex={lightboxIndex} 
+        onClose={() => lightboxIndex = null} 
+    />
+	{/if}
+
 </div>
