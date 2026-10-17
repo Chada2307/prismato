@@ -168,3 +168,4 @@ def get_info(db: Session = Depends(get_db)):
     return {
         "count": total_count
     }
+

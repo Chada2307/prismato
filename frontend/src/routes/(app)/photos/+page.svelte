@@ -1,7 +1,7 @@
 <script lang="ts">
     import { invalidateAll } from '$app/navigation';
     import PhotoCard from '$lib/components/PhotoCard.svelte';
-    import { Loader2, FolderHeart, X } from 'lucide-svelte';
+    import { Loader2, FolderHeart, X, Trash2 } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
     import Lightbox from '$lib/components/Lightbox.svelte';
 
@@ -41,10 +41,10 @@
 
 	function toggleManualSelection() {
     manualSelectionMode = !manualSelectionMode;
-    if (!manualSelectionMode) {
-        selectedPhotoIds = [];
+        if (!manualSelectionMode) {
+            selectedPhotoIds = [];
+        }
     }
-}
     function toggleSelection(photoId: string) {
         if (selectedPhotoIds.includes(photoId)) {
             selectedPhotoIds = selectedPhotoIds.filter(id => id !== photoId);
@@ -148,6 +148,26 @@
         }
 
     }
+
+    async function deleteSelectedPhotos(){
+        if(!confirm(`Czy na pewno chcesz usunąć ${selectedPhotoIds.length} zdjęc do kosza?`));
+
+        try{
+            const res = await fetch(`${PUBLIC_API_URL}/trash/bulk-delete-soft`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ photo_ids: selectedPhotoIds }) 
+            });
+
+            if(res.ok){
+                photos = photos.filter(photo => !selectedPhotoIds.includes(photo.id));
+                selectedPhotoIds = [];
+            }
+   
+        }catch(err){
+                console.error("Błąd podczas masowego usuwania: ", console.error());
+        }
+    }
 </script>
 
 <div class="relative flex min-h-screen flex-col gap-8 pb-24">
@@ -157,9 +177,9 @@
 		<button 
         onclick={toggleManualSelection}
         class="rounded-lg px-4 py-2 text-sm font-medium transition-colors {isSelectionMode ? 'bg-brand text-white' : 'bg-gray-100 text-dark-text hover:bg-gray-200'}"
-    >
+            >
         {isSelectionMode ? 'Anuluj wybór' : 'Wybierz zdjęcia'}
-    </button>
+        </button>
     </header>
 
     <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -213,10 +233,17 @@
                 <FolderHeart size={16} />
                 Dodaj do albumu
             </button>
+            
+            <button onclick={deleteSelectedPhotos} class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700">
+                <Trash2 size={16} />
+                    Usuń zaznaczone
+            </button>
 
             <button onclick={cancelSelection} class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-dark-text">
                 <X size={18} />
             </button>
+           
+           
         </div>
     {/if}
 </div>

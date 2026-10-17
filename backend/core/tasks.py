@@ -30,3 +30,18 @@ def process_photo_task(photo_id: str, file_path: str, thumb_path:str):
         db.close()
 
     return {"status": "success", "photo_id": photo_id}
+
+
+@celery_app.task
+def delete_physical_file_task(file_paths: list):
+    deleted = 0
+    for path in file_paths:
+        if path and os.path.exists(path):
+            try:
+                os.remove(path)
+                deleted += 1
+            except Exception as e:
+                print(f"Błąd podczas usuwania pliku {path}: {e}")
+                
+    print(f"Celery: Pomyślnie usunięto {deleted} plików z dysku.")
+    return {"status": "success", "deleted_files": deleted}    

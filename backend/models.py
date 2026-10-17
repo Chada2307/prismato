@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, Boolean, Table
-
+from pydantic import BaseModel
+from typing import List
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from database import Base
@@ -12,6 +13,9 @@ photo_album_assoc = Table(
     Column('photo_id', UUID(as_uuid=True), ForeignKey('photos.id'), primary_key=True),
     Column('album_id', UUID(as_uuid=True), ForeignKey('albums.id'), primary_key=True)
 )
+
+class BulkDeleteRequest(BaseModel):
+    photo_ids: List[uuid.UUID]
 
 class Album(Base):
     __tablename__ = "albums"
