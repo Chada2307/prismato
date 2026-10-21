@@ -4,6 +4,7 @@
     import { Loader2, FolderHeart, X, Trash2 } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
     import Lightbox from '$lib/components/Lightbox.svelte';
+	import DragAndDrop from '$lib/components/DragAndDrop.svelte';
 
     type Photo = {
         id: string;
@@ -32,6 +33,30 @@
     let userAlbums = $state<{id: string, title: string}[]>([]);
     let isAddingToAlbum = $state(false);
     let lightboxIndex = $state<number | null>(null);
+
+    let groupedPhotos =  $derived.by(() => {
+        const sorted = [...photos].sort((a,b) => {
+            const dateA = a.captured_at ? new Date(a.captured_at).getTime() : 0;
+            const dateB = b.captured_at ? new Date(b.captured_at).getTime() : 0;
+            return dateB - dateA;
+        });
+
+        const groups: Record<string, typeof photos> = {};
+        for(const photo of sorted){
+            let label = "brak daty / przetwarzanie...";
+            if(photo.captured_at){
+                const date = new Date(photo.captured_at);
+                const monthYear = date.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+                label = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+            }
+            if(!groups[label]){
+                groups[label] = [];
+            }
+            groups[label].push(photo);
+        }
+        return groups;
+    });
+
 
     $effect(() => {
         photos = data.photos;
@@ -92,6 +117,8 @@
     }
 
     async function loadMore() {
+        if (isLoadingMore || !hasMore) return;
+
         isLoadingMore = true;
         try {
             const res = await fetch(`${PUBLIC_API_URL}/photos?skip=${offset}&limit=20`);
@@ -108,6 +135,25 @@
         } finally {
             isLoadingMore = false;
         }
+    }
+    function infiniteScroll(node: HTMLElement, callback: () => void) {
+        const observer = new IntersectionObserver((entries) => {
+        
+            if (entries[0].isIntersecting) {
+                callback();
+            }
+        }, { 
+        
+            rootMargin: '800px' 
+        });
+
+        observer.observe(node);
+
+        return {
+            destroy() {
+                observer.disconnect();
+            }
+        };
     }
 
     async function moveToTrash(photoId: string) {
@@ -182,43 +228,45 @@
         </button>
     </header>
 
-    <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {#each photos as photo, index (photo.id)}
-            <PhotoCard
-                id={photo.id}
-                thumbnail_url={photo.thumbnail_url}
-                captured_at={photo.captured_at}
-                camera_model={photo.camera_model}
-                is_favorite={photo.is_favorite}
-                isSelectionMode={isSelectionMode}
-                isSelected={selectedPhotoIds.includes(photo.id)}
-                onSelect={() => toggleSelection(photo.id)}
-                onDelete={() => moveToTrash(photo.id)}
-                onFavorite={() => toggleFavorite(photo.id)}
-                onClickImage={() => lightboxIndex = index}
-            />
+    <div class="flex flex-col gap-10">
+        {#each Object.entries(groupedPhotos) as [monthLabel, monthPhotos] (monthLabel)}
+            <section>
+                <h3 class="mb-4 text-xl font-bold text-dark-text/80">{monthLabel}</h3>
+            
+                <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    {#each monthPhotos as photo (photo.id)}
+                        <PhotoCard
+                            id={photo.id}
+                            thumbnail_url={photo.thumbnail_url}
+                            captured_at={photo.captured_at}
+                            camera_model={photo.camera_model}
+                            is_favorite={photo.is_favorite}
+                            isSelectionMode={isSelectionMode}
+                            isSelected={selectedPhotoIds.includes(photo.id)}
+                            onSelect={() => toggleSelection(photo.id)}
+                            onDelete={() => moveToTrash(photo.id)}
+                            onFavorite={() => toggleFavorite(photo.id)}
+                            onClickImage={() => lightboxIndex = photos.findIndex(p => p.id === photo.id)}
+                        />
+                    {/each}
+                </div>
+            </section>
         {/each}
     </div>
 
     {#if hasMore}
-        <div class="flex justify-center pb-12 pt-6">
-            <button
-                onclick={loadMore}
-                disabled={isLoadingMore}
-                class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-6 py-3 font-medium text-dark-text shadow-sm transition-all hover:bg-gray-50 hover:shadow-md disabled:opacity-50"
-            >
-                {#if isLoadingMore}
-                    <Loader2 size={18} class="animate-spin text-brand" />
-                    Wczytywanie...
-                {:else}
-                    Załaduj więcej zdjęć
-                {/if}
-            </button>
+        <div 
+            use:infiniteScroll={loadMore} 
+            class="flex justify-center pb-24 pt-6 text-brand"
+        >
+            {#if isLoadingMore}
+                <Loader2 size={32} class="animate-spin opacity-50" />
+            {/if}
         </div>
     {/if}
 
     {#if !hasMore && photos.length > 0}
-        <div class="flex justify-center pb-12 pt-6 text-sm text-gray-400">
+        <div class="flex justify-center pb-24 pt-6 text-sm font-medium text-gray-400">
             To już wszystkie zdjęcia w Twojej galerii.
         </div>
     {/if}

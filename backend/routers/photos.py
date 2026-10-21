@@ -38,7 +38,13 @@ def get_photos_list(
     if favorites:
         query = query.filter(models.Photo.is_favorite == True)
 
-    photos = query.offset(skip).limit(limit).all()
+    photos = (
+        query
+        .order_by(models.Photo.captured_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     result =[]
 
     for photo in photos:
@@ -113,10 +119,10 @@ async def get_thumbnail_photo( photo_id: uuid.UUID = Path(...), db: Session = De
     if not photo:
         raise HTTPException(status_code=404, detail="photo not found")
     
-    if not os.path.exists(photo.file_path):
-        raise HTTPException(status_code=404, detail="thumbnail file directory missing")
+    if not photo.thumbnail_path or not os.path.exists(photo.thumbnail_path):
+        raise HTTPException(status_code=404, detail="thumbnail file missing")
     
-    return FileResponse(photo.file_path)
+    return FileResponse(photo.thumbnail_path)
 
 @router.put("/{photo_id}/favorite")
 async def toggle_favorite(photo_id: uuid.UUID, db: Session = Depends(get_db)):

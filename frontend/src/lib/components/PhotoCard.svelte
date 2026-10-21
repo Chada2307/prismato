@@ -89,8 +89,9 @@
         <img
             src={fullImageUrl}
             alt={camera_model}
-            class="h-full w-full object-cover transition-transform duration-500 {isSelected ? 'scale-105' : 'group-hover:scale-110'}"
+            class="h-full w-full object-cover transform-gpu transition-transform  duration-500 {isSelected ? 'scale-105' : 'group-hover:scale-110'}"
             loading="lazy"
+            decoding="async"
         />
 
       
@@ -101,7 +102,7 @@
                         <CheckCircle2 size={24} fill="currentColor" class="text-brand" />
                     </div>
                 {:else}
-                    <div class="rounded-full bg-black/20 text-white backdrop-blur-md">
+                    <div class="rounded-full bg-black/20 text-white bg-brand">
                         <Circle size={24} />
                     </div>
                 {/if}
@@ -110,10 +111,10 @@
 
         {#if !isSelectionMode}
             <div class="absolute right-3 top-3 flex flex-col gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <button class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white backdrop-blur-md hover:bg-danger" onclick={handleFavorite}>
+                <button class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white bg-brand hover:bg-danger" onclick={handleFavorite}>
                     <Heart size={18} fill={is_favorite ? "red" : "none"} color={is_favorite ? "red" : "currentColor"} />
                 </button>
-                <button class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white backdrop-blur-md hover:bg-danger" onclick={handleDelete} disabled={isDeleting}>
+                <button class="flex h-10 w-10 items-center justify-center rounded-full bg-brand/80 text-white bg-brand hover:bg-danger" onclick={handleDelete} disabled={isDeleting}>
                     {#if isDeleting} <Loader2 size={18} class="animate-spin" /> {:else} <Trash size={18} /> {/if}
                 </button>
             </div>

@@ -39,7 +39,7 @@ def get_exif_date(path):
         print(f"Blad exif: {e}")
     return None
 
-def get_thumbnail(file_path: str, thumb_path: str, max_size: tuple = (1080, 1080)):
+def get_thumbnail(file_path: str, thumb_path: str, max_size: tuple = (300, 300)):
         try:
             with Image.open(file_path) as img:
                 img = ImageOps.exif_transpose(img)
@@ -49,7 +49,7 @@ def get_thumbnail(file_path: str, thumb_path: str, max_size: tuple = (1080, 1080
             
             img.thumbnail(max_size, Image.Resampling.LANCZOS)
             
-            img.save(thumb_path, format="WEBP", quality=80, method=4)
+            img.save(thumb_path, format="WEBP", quality=75, method=4)
 
             return True
 
