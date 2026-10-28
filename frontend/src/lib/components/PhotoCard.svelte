@@ -98,11 +98,11 @@
         {#if isSelectionMode}
             <div class="absolute left-3 top-3 z-10 transition-transform hover:scale-110">
                 {#if isSelected}
-                    <div class="rounded-full bg-white text-brand shadow-sm">
+                    <div class="rounded-full bg-brand text-brand shadow-sm">
                         <CheckCircle2 size={24} fill="currentColor" class="text-brand" />
                     </div>
                 {:else}
-                    <div class="rounded-full bg-black/20 text-white bg-brand">
+                    <div class="rounded-full bg-black/20 text-white ">
                         <Circle size={24} />
                     </div>
                 {/if}

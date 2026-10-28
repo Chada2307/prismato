@@ -1,12 +1,22 @@
 <script lang="ts">
-    import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-svelte';
+    import { X, ChevronLeft, ChevronRight, Heart, Trash2, FolderPlus, Loader2 } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
 
-    let { photos, initialIndex, onClose} = $props<{
+   let { 
+        photos, 
+        initialIndex, 
+        onClose,
+        onFavorite,
+        onDelete,
+        onAddToAlbum
+    } = $props<{
         photos: any[];
         initialIndex: number;
         onClose: () => void;
-    }>();
+        onFavorite: (id: string) => void;
+        onDelete: (id: string) => Promise<void>;
+        onAddToAlbum: (id: string) => void;
+    }>()
 
     let currentIndex = $state(initialIndex);
     let isLoading = $state(true);
@@ -50,9 +60,43 @@
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md" onclick={onClose}>
     
-    <button class="absolute right-6 top-6 z-50 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20" onclick={onClose}>
-        <X size={28} />
-    </button>
+    <div class="absolute left-0 right-0 top-0 z-50 flex items-center justify-end bg-gradient-to-b from-black/70 to-transparent p-6 text-white pointer-events-none">
+        <div class="flex items-center gap-4 pointer-events-auto">
+            <button 
+                onclick={(e) => { e.stopPropagation(); onFavorite(currentPhoto.id); }} 
+                class="rounded-full bg-white/10 p-2.5 transition-all hover:bg-white/20 hover:scale-105"
+                title="Dodaj do ulubionych"
+            >
+                <Heart size={24} fill={currentPhoto.is_favorite ? "red" : "none"} color={currentPhoto.is_favorite ? "red" : "white"} />
+            </button>
+            
+            <button 
+                onclick={(e) => { e.stopPropagation(); onAddToAlbum(currentPhoto.id); }} 
+                class="rounded-full bg-white/10 p-2.5 transition-all hover:bg-white/20 hover:scale-105 hover:text-brand"
+                title="Dodaj do albumu"
+            >
+                <FolderPlus size={24} />
+            </button>
+            
+            <button 
+                onclick={(e) => { e.stopPropagation(); onDelete(currentPhoto.id); }} 
+                class="rounded-full bg-white/10 p-2.5 transition-all hover:bg-white/20 hover:scale-105 hover:text-red-400"
+                title="Przenieś do kosza"
+            >
+                <Trash2 size={24} />
+            </button>
+            
+            <div class="mx-2 h-6 w-px bg-white/30"></div>
+            
+            <button 
+                class="rounded-full bg-white/10 p-2.5 transition-all hover:bg-white/20 hover:scale-105 hover:text-gray-300" 
+                onclick={(e) => { e.stopPropagation(); onClose(); }}
+                title="Zamknij (Esc)"
+            >
+                <X size={28} />
+            </button>
+        </div>
+    </div>
 
     {#if currentIndex > 0}
         <button class="absolute left-6 z-50 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 sm:left-12" onclick={(e) => { e.stopPropagation(); prev(); }}>
