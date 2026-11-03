@@ -12,12 +12,14 @@
     let selectedFiles: File[] = $state([]);
 
     let fileInput: HTMLInputElement;
+    let folderInput: HTMLInputElement;
 
     export function reset() {
         imagePreviews.forEach((url) => URL.revokeObjectURL(url));
         selectedFiles = [];
         imagePreviews = [];
         if (fileInput) fileInput.value = '';
+        if (folderInput) folderInput.value = '';
     }
 
     function handleDragOver(e: DragEvent): void {
@@ -25,18 +27,58 @@
         e.preventDefault();
         isDragging = true;
     }
+    
     function handleDragLeave(): void {
         if (disabled) return;
         isDragging = false;
     }
-    function handleDrop(e: DragEvent): void {
+    async function handleDrop(e: DragEvent) {
         if (disabled) return;
         e.preventDefault();
         isDragging = false;
-        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-            processFiles(Array.from(e.dataTransfer.files));
+
+        const items = e.dataTransfer?.items;
+        if (!items) return;
+
+        const extractedFiles: File[] = [];
+
+        async function readEntry(entry: any) {
+            if (entry.isFile) {
+                return new Promise<void>((resolve) => {
+                    entry.file((file: File) => {
+                        extractedFiles.push(file);
+                        resolve();
+                    });
+                });
+            } else if (entry.isDirectory) {
+                const dirReader = entry.createReader();
+                return new Promise<void>((resolve) => {
+                    dirReader.readEntries(async (entries: any[]) => {
+                        for (const childEntry of entries) {
+                            await readEntry(childEntry);
+                        }
+                        resolve();
+                    });
+                });
+            }
         }
+
+        const promises = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'file') {
+                const entry = item.webkitGetAsEntry();
+                if (entry) {
+                    promises.push(readEntry(entry));
+                }
+            }
+        }
+
+        await Promise.all(promises);
+        
+        processFiles(extractedFiles);
     }
+    
     function handleFileSelect(e: Event): void {
         if (disabled) return;
         const target = e.target as HTMLInputElement;
@@ -50,30 +92,27 @@
 
         if (validFiles.length > 0) {
             selectedFiles = validFiles;
-            
             imagePreviews = [URL.createObjectURL(validFiles[0])];
             
             if (onFilesDropped) {
                 onFilesDropped(validFiles);
             }
         } else {
-            alert('Wybierz tylko pliki graficzne');
+            alert('Brak poprawnych plików graficznych w tym folderze/zaznaczeniu.');
         }
     }
 </script>
 
 <div class="mb-6 text-left {disabled ? 'opacity-50 pointer-events-none' : ''}">
-    <label class="mb-2 block text-sm font-bold text-gray-700" for="Photo"> Wybierz zdjęcia </label>
+    <label class="mb-2 block text-sm font-bold text-gray-700" for="Photo"> Wybierz zdjęcia lub foldery </label>
 
     <div
-        role="button"
-        tabindex="0"
+        role="region"
+        aria-label="Obszar zrzucania plików"
         ondragover={handleDragOver}
         ondragleave={handleDragLeave}
         ondrop={handleDrop}
-        onclick={() => !disabled && fileInput.click()}
-        onkeydown={(e) => e.key === 'Enter' && !disabled && fileInput.click()}
-        class="cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200
+        class="rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200
              {isDragging
             ? 'scale-[1.02] border-brand bg-brand/5'
             : 'border-gray-300 bg-white hover:bg-gray-50'}"
@@ -91,12 +130,35 @@
                 {/if}
             </div>
         {:else}
-            <div class="text-gray-500">
-                <svg class="mx-auto mb-3 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex flex-col items-center justify-center text-gray-500">
+                <svg class="mb-3 h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                 </svg>
-                <p class="font-medium text-gray-700">Przeciągnij i upuść zdjęcia tutaj</p>
-                <p class="mt-1 text-sm">lub kliknij, aby wybrać z dysku</p>
+                <p class="font-medium text-gray-700">Przeciągnij i upuść pliki lub foldery tutaj</p>
+                
+                <div class="mt-4 flex items-center justify-center gap-3">
+                    <button
+                        type="button"
+                        class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-dark-text transition-colors hover:bg-gray-200"
+                        onclick={(e) => {
+                            e.stopPropagation();
+                            if (!disabled) fileInput.click();
+                        }}
+                    >
+                        Wybierz pliki
+                    </button>
+                    <span class="text-sm text-gray-400">lub</span>
+                    <button
+                        type="button"
+                        class="rounded-lg bg-brand/10 px-4 py-2 text-sm font-semibold text-brand transition-colors hover:bg-brand/20"
+                        onclick={(e) => {
+                            e.stopPropagation();
+                            if (!disabled) folderInput.click();
+                        }}
+                    >
+                        Wybierz folder
+                    </button>
+                </div>
             </div>
         {/if}
     </div>
@@ -106,6 +168,16 @@
         type="file"
         accept="image/*"
         multiple
+        class="hidden"
+        onchange={handleFileSelect}
+        {disabled}
+    />
+    <input
+        bind:this={folderInput}
+        type="file"
+        accept="image/*"
+        multiple
+        webkitdirectory
         class="hidden"
         onchange={handleFileSelect}
         {disabled}

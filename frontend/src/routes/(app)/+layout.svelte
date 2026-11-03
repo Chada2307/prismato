@@ -99,7 +99,7 @@
 	</aside>
 
 	<div class="flex min-w-0 flex-1 flex-col">
-		<header class="z-10 flex h-20 items-center justify-between bg-brand px-10 shadow-md">
+		<header class="z-10 flex h-20 items-center justify-between bg-brand pr-10 pl-14 -ml-4 shadow-md">
 			<div class="relative w-full max-w-[450px]">
 				<input
 					type="text"
@@ -138,5 +138,5 @@
 <Model bind:showModal={isModalOpen}>
 	<UploadCard onCloseModal={() => isModalOpen = false} />
 </Model>
-	
+
 <UploadWidget />
