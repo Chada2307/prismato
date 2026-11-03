@@ -15,7 +15,7 @@ export async function addPhotosToAlbum(albumId: string, photoIds: string[]){
     if (!res.ok) throw new Error('Błąd podczas dodawania do albumu');
     return res.ok;
 }
-export async function fetchPhotos(offset: number, limit: number = 20) {
+export async function fetchPhotos(offset: number, limit: number = 30) {
     const res = await fetch(`${PUBLIC_API_URL}/photos?skip=${offset}&limit=${limit}`);
     if (!res.ok) throw new Error('Błąd pobierania kolejnych zdjęć');
     return res.json();

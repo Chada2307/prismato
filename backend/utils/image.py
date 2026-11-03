@@ -14,6 +14,8 @@ def get_advanced_metadata(path):
             captured_at = None
             if date_str:
                 captured_at = datetime.strptime(date_str,"%Y:%m:%d %H:%M:%S")
+            else:
+                captured_at = datetime.now()
 
             lat = metadata.get('Composite:GPSLatitude')
             lon = metadata.get('Composite:GPSLongitude')
@@ -22,7 +24,7 @@ def get_advanced_metadata(path):
             return captured_at, lat, lon, camera, metadata
     except Exception as e:
         print(f"Blad ExifTool: {e}")
-        return None, None, None, None, {}
+        return datetime.now(), None, None, 'Unknown', {}
 
 
 def get_exif_date(path):

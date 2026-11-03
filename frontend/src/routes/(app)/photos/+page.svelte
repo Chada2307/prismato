@@ -93,8 +93,14 @@
         isLoadingMore = true;
         try {
             const newPhotos = await api.fetchPhotos(offset);
-            photos.push(...newPhotos);
+
+            const uniqueNewPhotos = newPhotos.filter(
+                newPhoto => !photos.some(existing => existing.id === newPhoto.id)
+            );
+
+            photos.push(...uniqueNewPhotos);
             offset += newPhotos.length;
+            
             if (newPhotos.length < 20) hasMore = false;
         } catch (err) {
             console.error('Błąd pobierania kolejnych zdjęc', err);

@@ -67,7 +67,7 @@ def get_photos_list(
 
     photos = (
         query
-        .order_by(models.Photo.captured_at.desc())
+        .order_by(models.Photo.captured_at.desc(), models.Photo.id.desc())
         .offset(skip)
         .limit(limit)
         .all()

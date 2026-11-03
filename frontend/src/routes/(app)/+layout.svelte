@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Image, Search, Map, Heart, Folder, Trash, Upload } from 'lucide-svelte';
+	import UploadWidget from '$lib/components/UploadWidget.svelte';
 	import { page } from '$app/state';
 	import Model from '$lib/components/Model.svelte';
 	import UploadCard from '$lib/components/UploadCard.svelte';
@@ -135,5 +136,7 @@
 	</div>
 </div>
 <Model bind:showModal={isModalOpen}>
-	<UploadCard />
+	<UploadCard onCloseModal={() => isModalOpen = false} />
 </Model>
+	
+<UploadWidget />
