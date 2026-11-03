@@ -163,10 +163,14 @@
             console.error(err);
         }
     }
+
+   
 </script>
 
 <div class="relative flex min-h-screen flex-col gap-8 pb-24">
+
     <header>
+        
         <h2 class="text-3xl font-bold text-dark-text">Twoja Galeria</h2>
         <p class="text-dark-text/60">Łącznie zdjęć {count} zdjęć</p>
         <button 

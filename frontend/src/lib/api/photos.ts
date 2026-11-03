@@ -48,3 +48,11 @@ export async function bulkDeleteSoft(photoIds: string[]) {
     if (!res.ok) throw new Error('Błąd podczas masowego usuwania');
     return res.ok;
 }
+
+export async function nukeGallery() {
+    const res = await fetch(`${PUBLIC_API_URL}/photos/nuke`, { 
+        method: 'DELETE' 
+    });
+    if (!res.ok) throw new Error('Błąd podczas czyszczenia galerii');
+    return res.json();
+}

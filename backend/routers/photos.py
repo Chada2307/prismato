@@ -26,6 +26,33 @@ if not os.path.exists(UPLOAD_DIR) :
 if not os.path.exists(THUMBS_DIR):
     os.makedirs(THUMBS_DIR)
 
+@router.delete("/nuke", tags=["Dev Tools"])
+def nuke_all_photos(db: Session = Depends(get_db)):
+    
+    deleted_count = db.query(models.Photo).delete()
+    db.commit()
+
+    directories_to_clear = ["uploads/originals", "uploads/thumbnails"]
+    
+    files_deleted = 0
+    for directory in directories_to_clear:
+        if os.path.exists(directory):
+            for filename in os.listdir(directory):
+                file_path = os.path.join(directory, filename)
+                try:
+
+                    if os.path.isfile(file_path) and not filename.startswith("."):
+                        os.remove(file_path)
+                        files_deleted += 1
+                except Exception as e:
+                    print(f"Błąd usuwania pliku {file_path}: {e}")
+
+    return {
+        "message": "boom",
+        "db_records_deleted": deleted_count,
+        "files_deleted": files_deleted
+    }
+
 @router.get("", response_model=List[PhotoResponse])
 def get_photos_list(
     favorites: Optional[bool] = False,

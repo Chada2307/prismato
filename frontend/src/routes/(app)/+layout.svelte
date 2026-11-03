@@ -4,8 +4,28 @@
 	import Model from '$lib/components/Model.svelte';
 	import UploadCard from '$lib/components/UploadCard.svelte';
 	let { children } = $props();
+	import * as api from '$lib/api/photos'
 
 	let isModalOpen = $state(false);
+
+
+	 async function handleNuke() {
+        
+        const code = prompt("UWAGA: To usunie wszystkie zdjęcia z bazy i dysku. Wpisz 'NUKE' aby potwierdzić:");
+        if (code !== 'NUKE') return;
+
+        try {
+            await api.nukeGallery();
+            photos = [];
+            offset = 0;
+            count = 0;
+            hasMore = false;
+            alert('Galeria została całkowicie wyczyszczona.');
+        } catch (err) {
+            alert('Błąd połączenia z serwerem podczas czyszczenia.');
+            console.error(err);
+        }
+    }
 </script>
 
 <div class="flex h-screen overflow-hidden bg-main-bg font-['Inter']">
@@ -95,7 +115,12 @@
 				>
 					<span><Upload size={24} /></span> upload
 				</button>
-
+				<button 
+    onclick={handleNuke}
+    class="rounded-lg bg-red-100 px-4 py-2 text-sm font-bold text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+>
+    nuke
+</button>
 				<div
 					class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-main-bg font-bold text-brand shadow-sm transition-transform hover:scale-105"
 				>
