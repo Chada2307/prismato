@@ -4,10 +4,10 @@
 
     let { 
         id, 
-        thumbnail_url, 
+        thumbnail_url = $bindable(), 
         is_favorite, 
-        captured_at, 
-        camera_model, 
+        captured_at = $bindable(), 
+        camera_model = $bindable(), 
         onDelete, 
         onFavorite, 
         isSelectionMode, 
@@ -29,7 +29,36 @@
     }>();
     
     let isDeleting = $state(false);
+    let isProcessing = $derived(!thumbnail_url);
+    let checkInterval: any;
 
+    $effect(() => {
+        
+        if (isProcessing) {
+            checkInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`${PUBLIC_API_URL}/photos/${id}`);
+                    if (res.ok) {
+                        const updatedData = await res.json();
+                        
+                        if (updatedData.thumbnail_url) {
+                    
+                            thumbnail_url = updatedData.thumbnail_url;
+                            captured_at = updatedData.captured_at;
+                            camera_model = updatedData.camera_model;
+                            clearInterval(checkInterval);
+                        }
+                    }
+                } catch (err) {
+            
+                }
+            }, 3000);
+        } else {
+            clearInterval(checkInterval);
+        }
+
+        return () => clearInterval(checkInterval);
+    });
     async function handleDelete(e: Event) {
         e.stopPropagation();
         if (!confirm('Czy na pewno chcesz usunac to zdjecie?')) return;
@@ -57,7 +86,7 @@
     }
 
 
-    let fullImageUrl = $derived(thumbnail_url.startsWith('http')
+    let thumbnail = $derived(thumbnail_url.startsWith('http')
         ? thumbnail_url
         : `${PUBLIC_API_URL}${thumbnail_url}`);
 
@@ -86,13 +115,20 @@
         }}
 >
     <div class="relative aspect-square w-full overflow-hidden bg-zinc-100">
-        <img
-            src={fullImageUrl}
-            alt={camera_model}
-            class="h-full w-full object-cover transform-gpu transition-transform  duration-500 {isSelected ? 'scale-105' : 'group-hover:scale-110'}"
-            loading="lazy"
-            decoding="async"
-        />
+        
+        {#if isProcessing}
+            <div class="flex h-full w-full flex-col items-center justify-center bg-gray-100 text-brand/50">
+                <Loader2 class="mb-2 animate-spin" size={32} />
+                <span class="text-xs font-medium text-gray-400">Przetwarzanie...</span>
+            </div>
+        {:else}
+            <img
+                src={thumbnail}
+                alt="Photo {camera_model}"
+                onclick={onClickImage}
+                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+        {/if}
 
       
         {#if isSelectionMode}

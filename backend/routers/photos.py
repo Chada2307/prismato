@@ -53,6 +53,17 @@ def nuke_all_photos(db: Session = Depends(get_db)):
         "files_deleted": files_deleted
     }
 
+@router.get("/info")
+def get_info(db: Session = Depends(get_db)):
+    total_count = db.query(func.count(models.Photo.id)).filter(
+        models.Photo.is_deleted == False
+    ).scalar()
+
+    return {
+        "count": total_count
+    }
+
+
 @router.get("", response_model=List[PhotoResponse])
 def get_photos_list(
     favorites: Optional[bool] = False,
@@ -85,6 +96,13 @@ def get_photos_list(
         })
             
     return result
+
+@router.get("/{photo_id}")
+def get_single_photo(photo_id: str, db: Session = Depends(get_db)):
+    photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return photo
 
 @router.post("/upload/")
 async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -195,13 +213,4 @@ def get_map_photos(db: Session = Depends(get_db)):
         for p in photos
     ]
 
-@router.get("/info")
-def get_info(db: Session = Depends(get_db)):
-    total_count = db.query(func.count(models.Photo.id)).filter(
-        models.Photo.is_deleted == False
-    ).scalar()
-
-    return {
-        "count": total_count
-    }
 

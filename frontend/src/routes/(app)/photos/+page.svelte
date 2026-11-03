@@ -1,11 +1,13 @@
 <script lang="ts">
     import { invalidateAll } from '$app/navigation';
+    import { onMount } from 'svelte';
     import PhotoCard from '$lib/components/PhotoCard.svelte';
     import { Loader2, FolderHeart, X, Trash2 } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
     import Lightbox from '$lib/components/Lightbox.svelte';
     import DragAndDrop from '$lib/components/DragAndDrop.svelte';
     import { SelectionState } from '$lib/states/selection.svelte';
+    import { uploader } from '$lib/states/upload.svelte';
     import * as api from '$lib/api/photos';
 
     const selection = new SelectionState();
@@ -33,6 +35,11 @@
     let userAlbums = $state<{id: string, title: string}[]>([]);
     let isAddingToAlbum = $state(false);
     let lightboxIndex = $state<number | null>(null);
+        
+    //03.11
+    let syncInterval: ReturnType<typeof setInterval>;
+
+    
 
     let groupedPhotos =  $derived.by(() => {
         const sorted = [...photos].sort((a,b) => {
@@ -100,7 +107,7 @@
 
             photos.push(...uniqueNewPhotos);
             offset += newPhotos.length;
-            
+
             if (newPhotos.length < 20) hasMore = false;
         } catch (err) {
             console.error('Błąd pobierania kolejnych zdjęc', err);
@@ -170,6 +177,43 @@
         }
     }
 
+    async function syncLatestPhotos() {
+        try {
+            const res = await fetch(`${PUBLIC_API_URL}/photos?skip=0&limit=20`);
+            if (!res.ok) return;
+            
+            const latestPhotos = await res.json();
+        
+            for (const fresh of latestPhotos) {
+                const existingIndex = photos.findIndex(p => p.id === fresh.id);
+                
+                if (existingIndex !== -1) {
+            
+                    if (photos[existingIndex].thumbnail_url !== fresh.thumbnail_url || 
+                        photos[existingIndex].captured_at !== fresh.captured_at) {
+                        photos[existingIndex] = fresh; 
+                    }
+                } else {
+                    photos.unshift(fresh);
+                    offset++; 
+                }
+            }
+
+            if (uploader.isUploading) {
+                const infoRes = await fetch(`${PUBLIC_API_URL}/photos/info`);
+                if (infoRes.ok) count = (await infoRes.json()).count;
+            }
+        } catch (err) {
+            
+        }
+    }
+
+    onMount(() => {
+        syncInterval = setInterval(syncLatestPhotos, 3000);
+        return () => {
+            clearInterval(syncInterval);
+        };
+    });
    
 </script>
 
@@ -193,12 +237,12 @@
                 <h3 class="mb-4 text-xl font-bold text-dark-text/80">{monthLabel}</h3>
             
                 <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                    {#each monthPhotos as photo (photo.id)}
+                    {#each monthPhotos as photo, i (photo.id)}
                         <PhotoCard
                             id={photo.id}
-                            thumbnail_url={photo.thumbnail_url}
-                            captured_at={photo.captured_at}
-                            camera_model={photo.camera_model}
+                            bind:thumbnail_url={photos[i].thumbnail_url}
+                            bind:captured_at={photos[i].captured_at}
+                            bind:camera_model={photos[i].camera_model}
                             is_favorite={photo.is_favorite}
                             isSelectionMode={selection.isSelectionMode}
                             isSelected={selection.selectedIds.includes(photo.id)}
