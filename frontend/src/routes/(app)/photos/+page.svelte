@@ -229,12 +229,12 @@
                 <h3 class="mb-4 text-xl font-bold text-dark-text/80">{monthLabel}</h3>
             
                 <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                    {#each monthPhotos as photo, i (photo.id)}
+                    {#each monthPhotos as photo (photo.id)}
                         <PhotoCard
                             id={photo.id}
-                            bind:thumbnail_url={photos[i].thumbnail_url}
-                            bind:captured_at={photos[i].captured_at}
-                            bind:camera_model={photos[i].camera_model}
+                            thumbnail_url={photo.thumbnail_url}
+                            captured_at={photo.captured_at}
+                            camera_model={photo.camera_model}
                             is_favorite={photo.is_favorite}
                             isSelectionMode={selection.isSelectionMode}
                             isSelected={selection.selectedIds.includes(photo.id)}

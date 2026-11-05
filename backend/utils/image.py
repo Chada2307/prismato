@@ -19,8 +19,10 @@ def get_advanced_metadata(path):
 
             lat = metadata.get('Composite:GPSLatitude')
             lon = metadata.get('Composite:GPSLongitude')
+            maker = metadata.get('EXIF:Make', 'Unknown')
+            model = metadata.get('EXIF:Model', 'Unknown')
+            camera = (maker + " " +  model) 
 
-            camera= metadata.get('EXIF:Model', 'Unknown')
             return captured_at, lat, lon, camera, metadata
     except Exception as e:
         print(f"Blad ExifTool: {e}")

@@ -31,6 +31,12 @@
     let isDeleting = $state(false);
     let isProcessing = $derived(!thumbnail_url);
 
+    let displayCameraModel = $derived(
+            !camera_model || camera_model.toLowerCase().includes('unknown') 
+            ? '--' 
+            : camera_model
+        );
+
     async function handleDelete(e: Event) {
         e.stopPropagation();
         if (!confirm('Czy na pewno chcesz usunac to zdjecie?')) return;
@@ -129,7 +135,7 @@
     </div>
 
     <div class="flex flex-col gap-0.5 p-4">
-        <h3 class="truncate text-sm font-semibold text-dark-text">{camera_model}</h3>
+        <h3 class="truncate text-sm font-semibold text-dark-text">{displayCameraModel}</h3>
         <p class="text-[10px] font-normal uppercase tracking-wider text-dark-text/50">{dateFormatted}</p>
     </div>
 </div>

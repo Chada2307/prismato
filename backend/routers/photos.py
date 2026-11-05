@@ -95,6 +95,27 @@ def get_photos_list(
             
     return result
 
+@router.get("/map-data")
+def get_map_photos(db: Session = Depends(get_db)):
+    photos = db.query(models.Photo).filter(
+        models.Photo.latitude.isnot(None),
+        models.Photo.longitude.isnot(None),
+        models.Photo.is_deleted == False
+    ).all()
+
+    return [
+        {
+            "id": p.id,
+            "lat": p.latitude,
+            "lng": p.longitude,
+            "thumbnail_url": p.thumbnail_path,        
+            "original_url": f"/photos/{p.id}/original",
+            "camera_model": p.camera_model,
+            "captured_at": p.captured_at,
+        }
+        for p in photos
+    ]
+
 @router.get("/{photo_id}")
 def get_single_photo(photo_id: str, db: Session = Depends(get_db)):
     photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
@@ -200,23 +221,3 @@ async def move_to_trash(photo_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Photo {photo_id} moved to trash"}
 
-@router.get("/map-data")
-def get_map_photos(db: Session = Depends(get_db)):
-    photos = db.query(models.Photo).filter(
-        models.Photo.latitude.isnot(None),
-        models.Photo.longitude.isnot(None),
-        models.Photo.is_deleted == False
-    ).all()
-
-    return [
-        {
-            "id": p.id,
-            "lat": p.latitude,
-            "lng": p.longitude,
-            "thumbnail_url": p.thumbnail_path,        
-            "original_url": f"/photos/{p.id}/original",
-            "camera_model": p.camera_model,
-            "captured_at": p.captured_at,
-        }
-        for p in photos
-    ]
