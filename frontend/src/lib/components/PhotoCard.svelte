@@ -30,7 +30,7 @@
     
     let isDeleting = $state(false);
     let isProcessing = $derived(!thumbnail_url);
-    
+
     async function handleDelete(e: Event) {
         e.stopPropagation();
         if (!confirm('Czy na pewno chcesz usunac to zdjecie?')) return;
@@ -97,7 +97,6 @@
             <img
                 src={thumbnail}
                 alt="Photo {camera_model}"
-                onclick={onClickImage}
                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
         {/if}
