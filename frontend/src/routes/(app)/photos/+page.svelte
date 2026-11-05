@@ -28,20 +28,14 @@
 
     let offset = $state(20);
     let isLoadingMore = $state(false);
-
     let hasMore = $state(data.photos.length >= 20);
 
     let showAlbumModal = $state(false);
     let userAlbums = $state<{id: string, title: string}[]>([]);
     let isAddingToAlbum = $state(false);
     let lightboxIndex = $state<number | null>(null);
-        
-    //03.11
-    let syncInterval: ReturnType<typeof setInterval>;
 
-    
-
-    let groupedPhotos =  $derived.by(() => {
+    let groupedPhotos = $derived.by(() => {
         const sorted = [...photos].sort((a,b) => {
             const dateA = a.captured_at ? new Date(a.captured_at).getTime() : 0;
             const dateB = b.captured_at ? new Date(b.captured_at).getTime() : 0;
@@ -63,7 +57,6 @@
         }
         return groups;
     });
-
 
     $effect(() => {
         photos = data.photos;
@@ -96,18 +89,14 @@
 
     async function loadMore() {
         if (isLoadingMore || !hasMore) return;
-
         isLoadingMore = true;
         try {
             const newPhotos = await api.fetchPhotos(offset);
-
             const uniqueNewPhotos = newPhotos.filter(
                 newPhoto => !photos.some(existing => existing.id === newPhoto.id)
             );
-
             photos.push(...uniqueNewPhotos);
             offset += newPhotos.length;
-
             if (newPhotos.length < 20) hasMore = false;
         } catch (err) {
             console.error('Błąd pobierania kolejnych zdjęc', err);
@@ -121,17 +110,9 @@
             if (entries[0].isIntersecting) {
                 callback();
             }
-        }, { 
-            rootMargin: '800px' 
-        });
-
+        }, { rootMargin: '800px' });
         observer.observe(node);
-
-        return {
-            destroy() {
-                observer.disconnect();
-            }
-        };
+        return { destroy() { observer.disconnect(); } };
     }
 
     async function moveToTrash(photoId: string) {
@@ -139,6 +120,7 @@
             await api.deletePhoto(photoId);
             photos = photos.filter((photo) => photo.id !== photoId);
             offset -= 1;
+            if (count !== null) count -= 1;
         } catch (err) {
             alert('Nie udało się przenieść do kosza');
         }
@@ -154,68 +136,78 @@
         }
     }
 
-    async function getInfo(){
-        try{
-            const res = await fetch(`${PUBLIC_API_URL}/photos/info`);
-            if (res.ok){
-                const response = await res.json();
-                count = response;
-            }
-        }catch(err){
-            console.error('błąd pobrania informacji', err);
-        }
-    }
-
     async function deleteSelectedPhotos(){
         if(!confirm(`Czy na pewno chcesz usunąć ${selection.selectedIds.length} zdjęć do kosza?`)) return;
         try {
             await api.bulkDeleteSoft(selection.selectedIds);
             photos = photos.filter(photo => !selection.selectedIds.includes(photo.id));
+            if (count !== null) count -= selection.selectedIds.length;
             selection.clear();
         } catch(err) {
             console.error(err);
         }
     }
+    
+    let syncInterval: ReturnType<typeof setInterval>;
+    let gracePeriodUntil = $state(0);
 
     async function syncLatestPhotos() {
+        if (uploader.isUploading) {
+            gracePeriodUntil = Date.now() + 20000; 
+        }
+
+        const isUploading = uploader.isUploading;
+        const isGracePeriod = Date.now() < gracePeriodUntil;
+        
+
+        const hasProcessingPhotos = photos.some(p => !p.thumbnail_url);
+        
+
+        if (!isUploading && !isGracePeriod && !hasProcessingPhotos) {
+            return; 
+        }
+
         try {
+
             const res = await fetch(`${PUBLIC_API_URL}/photos?skip=0&limit=20`);
             if (!res.ok) return;
             
             const latestPhotos = await res.json();
-        
+            
             for (const fresh of latestPhotos) {
                 const existingIndex = photos.findIndex(p => p.id === fresh.id);
                 
                 if (existingIndex !== -1) {
-            
+       
                     if (photos[existingIndex].thumbnail_url !== fresh.thumbnail_url || 
-                        photos[existingIndex].captured_at !== fresh.captured_at) {
+                        photos[existingIndex].captured_at !== fresh.captured_at ||
+                        photos[existingIndex].camera_model !== fresh.camera_model) {
                         photos[existingIndex] = fresh; 
                     }
                 } else {
+                  
                     photos.unshift(fresh);
                     offset++; 
                 }
             }
 
-            if (uploader.isUploading) {
+            if (isUploading || isGracePeriod) {
                 const infoRes = await fetch(`${PUBLIC_API_URL}/photos/info`);
-                if (infoRes.ok) count = (await infoRes.json()).count;
+                if (infoRes.ok) {
+                    count = (await infoRes.json()).count;
+                }
             }
         } catch (err) {
-            
+            console.error("Błąd synchronizacji:", err);
         }
     }
 
     onMount(() => {
-        syncInterval = setInterval(syncLatestPhotos, 3000);
-        return () => {
-            clearInterval(syncInterval);
-        };
+        syncInterval = setInterval(syncLatestPhotos, 8000);
+        return () => clearInterval(syncInterval);
     });
-   
 </script>
+
 
 <div class="relative flex min-h-screen flex-col gap-8 pb-24">
 

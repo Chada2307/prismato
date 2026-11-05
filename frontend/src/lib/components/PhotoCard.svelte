@@ -30,35 +30,7 @@
     
     let isDeleting = $state(false);
     let isProcessing = $derived(!thumbnail_url);
-    let checkInterval: any;
-
-    $effect(() => {
-        
-        if (isProcessing) {
-            checkInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`${PUBLIC_API_URL}/photos/${id}`);
-                    if (res.ok) {
-                        const updatedData = await res.json();
-                        
-                        if (updatedData.thumbnail_url) {
-                    
-                            thumbnail_url = updatedData.thumbnail_url;
-                            captured_at = updatedData.captured_at;
-                            camera_model = updatedData.camera_model;
-                            clearInterval(checkInterval);
-                        }
-                    }
-                } catch (err) {
-            
-                }
-            }, 3000);
-        } else {
-            clearInterval(checkInterval);
-        }
-
-        return () => clearInterval(checkInterval);
-    });
+    
     async function handleDelete(e: Event) {
         e.stopPropagation();
         if (!confirm('Czy na pewno chcesz usunac to zdjecie?')) return;

@@ -1,11 +1,9 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Path
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Path, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
-import uuid
-import os
-import shutil
+import uuid, os, shutil, asyncio, json
 from datetime import datetime
 import models
 from schemas import PhotoResponse
@@ -105,18 +103,8 @@ def get_single_photo(photo_id: str, db: Session = Depends(get_db)):
     return photo
 
 @router.post("/upload/")
-async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    file_extension = file.filename.split(".")[-1]
+async def upload_photos(files: List[UploadFile] = File(...), db: Session = Depends(get_db)):
     
-    base_uuid = str(uuid.uuid4())
-    unique_filename = f"{base_uuid}.{file_extension}"
-
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
-    thumb_path = os.path.join(THUMBS_DIR, f"{base_uuid}.webp")
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-                
     test_user = db.query(models.User).first()
     if not test_user:
         test_user = models.User(username="test_user", passwd_hash="dummy")
@@ -124,22 +112,42 @@ async def upload_photo(file: UploadFile = File(...), db: Session = Depends(get_d
         db.commit()
         db.refresh(test_user)
 
-    new_photo = models.Photo(
-        owner_id = test_user.id,
-        file_path = file_path,
-        file_size = os.path.getsize(file_path),
-        thumbnail_path = thumb_path,
-    )
+    celery_tasks_info = []
+    photo_ids = []
 
-    db.add(new_photo)
+    for file in files:
+        file_extension = file.filename.split(".")[-1]
+        
+        base_uuid = str(uuid.uuid4())
+        unique_filename = f"{base_uuid}.{file_extension}"
+
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        thumb_path = os.path.join(THUMBS_DIR, f"{base_uuid}.webp")
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+                
+        new_photo = models.Photo(
+            owner_id=test_user.id,
+            file_path=file_path,
+            file_size=os.path.getsize(file_path),
+            thumbnail_path=thumb_path,
+        )
+        
+        db.add(new_photo)
+        db.flush()
+        
+        celery_tasks_info.append((new_photo.id, file_path, thumb_path))
+        photo_ids.append(new_photo.id)
+
     db.commit()
-    db.refresh(new_photo)
 
-    process_photo_task.delay(new_photo.id, file_path, thumb_path)
+    for task_info in celery_tasks_info:
+        process_photo_task.delay(*task_info)
 
-    return{
-        "message": "zdjecie przyjete. przetwarzanie w tle",
-        "photo_id": new_photo.id,
+    return {
+        "message": f"Pomyślnie przyjęto paczkę {len(files)} zdjęć.",
+        "photo_ids": photo_ids,
         "status": "processing"
     }
 
@@ -212,5 +220,3 @@ def get_map_photos(db: Session = Depends(get_db)):
         }
         for p in photos
     ]
-
-
