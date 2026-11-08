@@ -1,6 +1,7 @@
 <script lang="ts">
     import { invalidateAll } from '$app/navigation';
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
+    import { searchState } from '$lib/states/search.svelte';
     import PhotoCard from '$lib/components/PhotoCard.svelte';
     import { Loader2, FolderHeart, X, Trash2 } from 'lucide-svelte';
     import { PUBLIC_API_URL } from '$env/static/public';
@@ -9,6 +10,7 @@
     import { SelectionState } from '$lib/states/selection.svelte';
     import { uploader } from '$lib/states/upload.svelte';
     import * as api from '$lib/api/photos';
+    
 
     const selection = new SelectionState();
 
@@ -34,6 +36,11 @@
     let userAlbums = $state<{id: string, title: string}[]>([]);
     let isAddingToAlbum = $state(false);
     let lightboxIndex = $state<number | null>(null);
+    
+    let searchTimeout: ReturnType<typeof setTimeout>;
+
+
+    
 
     let groupedPhotos = $derived.by(() => {
         const sorted = [...photos].sort((a,b) => {
@@ -62,6 +69,29 @@
         photos = data.photos;
         offset = data.photos.length;
         hasMore = data.photos.length >= 20;
+
+
+        const currentQuery = searchState.query;
+
+        untrack(() => {
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(async () => {
+                offset = 0;
+                isLoadingMore = true;
+
+                try {
+                    const newPhotos = await api.fetchPhotos(offset, 30, currentQuery);
+                    photos = newPhotos;
+                    offset = photos.length;
+                    hasMore = photos.length === 30; 
+                } catch (err) {
+                    console.error('Błąd wyszukiwania:', err);
+                } finally {
+                    isLoadingMore = false;
+                }
+            }, 300);
+        });
     });
 
     async function openAlbumModal() {
@@ -91,13 +121,13 @@
         if (isLoadingMore || !hasMore) return;
         isLoadingMore = true;
         try {
-            const newPhotos = await api.fetchPhotos(offset);
+            const newPhotos = await api.fetchPhotos(offset, 30, searchState.query);
             const uniqueNewPhotos = newPhotos.filter(
                 newPhoto => !photos.some(existing => existing.id === newPhoto.id)
             );
             photos.push(...uniqueNewPhotos);
             offset += newPhotos.length;
-            if (newPhotos.length < 20) hasMore = false;
+            if (newPhotos.length < 30) hasMore = false;
         } catch (err) {
             console.error('Błąd pobierania kolejnych zdjęc', err);
         } finally {
@@ -168,8 +198,11 @@
         }
 
         try {
-
-            const res = await fetch(`${PUBLIC_API_URL}/photos?skip=0&limit=20`);
+            
+            const params = new URLSearchParams({ skip: '0', limit: Math.max(20, offset).toString() });
+            if (searchState.query.trim()) params.append('q', searchState.query.trim());
+            const res = await fetch(`${PUBLIC_API_URL}/photos?${params.toString()}`);
+            
             if (!res.ok) return;
             
             const latestPhotos = await res.json();

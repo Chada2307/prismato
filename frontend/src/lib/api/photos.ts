@@ -15,8 +15,17 @@ export async function addPhotosToAlbum(albumId: string, photoIds: string[]){
     if (!res.ok) throw new Error('Błąd podczas dodawania do albumu');
     return res.ok;
 }
-export async function fetchPhotos(offset: number, limit: number = 30) {
-    const res = await fetch(`${PUBLIC_API_URL}/photos?skip=${offset}&limit=${limit}`);
+export async function fetchPhotos(offset: number, limit: number = 30, q: string = '') {
+    const params = new URLSearchParams({
+        skip: offset.toString(),
+        limit: limit.toString() 
+    })
+
+    if (q.trim() !== ''){
+        params.append('q', q.trim());
+    }
+
+    const res = await fetch(`${PUBLIC_API_URL}/photos?${params.toString()}`);
     if (!res.ok) throw new Error('Błąd pobierania kolejnych zdjęć');
     return res.json();
 }

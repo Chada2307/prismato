@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Path, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_, cast, String
 from typing import List, Optional
 import uuid, os, shutil, asyncio, json
 from datetime import datetime
@@ -67,12 +67,21 @@ def get_photos_list(
     favorites: Optional[bool] = False,
     skip: int = 0,
     limit: int = 20,
-    
+    q: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     query  = db.query(models.Photo).filter(models.Photo.is_deleted == False)
     if favorites:
         query = query.filter(models.Photo.is_favorite == True)
+
+    if q:
+        search_term = f"%{q}%"
+        query = query.filter(
+            or_(
+                models.Photo.camera_model.ilike(search_term),
+                cast(models.Photo.captured_at, String).ilike(search_term)
+            )
+        )
 
     photos = (
         query

@@ -5,7 +5,8 @@
 	import Model from '$lib/components/Model.svelte';
 	import UploadCard from '$lib/components/UploadCard.svelte';
 	let { children } = $props();
-	import * as api from '$lib/api/photos'
+	import * as api from '$lib/api/photos';
+	import { searchState } from '$lib/states/search.svelte';
 
 	let isModalOpen = $state(false);
 
@@ -103,7 +104,8 @@
 			<div class="relative w-full max-w-[450px]">
 				<input
 					type="text"
-					placeholder="search for..."
+					bind:value={searchState.query}
+					placeholder="szukaj..."
 					class="h-10 w-full rounded-full bg-main-bg pr-4 pl-12 text-dark-text transition-all outline-none placeholder:text-dark-text/50 focus:ring-2 focus:ring-white"
 				/>
 				<span class="absolute top-2 left-4 text-dark-text/50"><Search size={24} /></span>
