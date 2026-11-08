@@ -47,6 +47,15 @@ def add_photos_to_album(album_id: uuid.UUID, payload: schemas.AlbumAddPhotos, db
     if not album:
         raise HTTPException(status_code=404, details="Nie znaleziono albumu")
 
+    tag_name = album.title.strip().lower()
+
+    tag = db.query(models.Tag).filter(models.Tag.name == tag_name).first()
+    
+    if not tag:
+        tag = models.Tag(name=tag_name)
+        db.add(tag)
+        db.flush()
+
     photos = db.query(models.Photo).filter(
         models.Photo.id.in_(payload.photo_ids),
         models.Photo.is_deleted == False
@@ -59,6 +68,9 @@ def add_photos_to_album(album_id: uuid.UUID, payload: schemas.AlbumAddPhotos, db
         if photo.id not in existing_photo_ids:
             album.photos.append(photo)
             added_count += 1
+
+        if tag not in photo.tags:
+            photo.tags.append(tag)
 
     db.commit()
     return {"message": f"pomyslnie dodano {added_count} zdjęć do albumu"}
