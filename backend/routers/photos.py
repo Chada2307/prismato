@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Path, Request
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func, or_, cast, String
 from typing import List, Optional
 import uuid, os, shutil, asyncio, json
@@ -79,12 +79,14 @@ def get_photos_list(
         query = query.filter(
             or_(
                 models.Photo.camera_model.ilike(search_term),
-                cast(models.Photo.captured_at, String).ilike(search_term)
+                cast(models.Photo.captured_at, String).ilike(search_term),
+                models.Photo.tags.any(models.Tag.name.ilike(search_term))
             )
         )
 
     photos = (
         query
+        .options(selectinload(models.Photo.tags))
         .order_by(models.Photo.captured_at.desc(), models.Photo.id.desc())
         .offset(skip)
         .limit(limit)
@@ -99,7 +101,8 @@ def get_photos_list(
             "camera_model": photo.camera_model,
             "thumbnail_url": f"/photos/{photo.id}/thumbnail",
             "original_url": f"/photos/{photo.id}/original",
-            "is_favorite": photo.is_favorite
+            "is_favorite": photo.is_favorite,
+            "tags": photo.tags
         })
             
     return result
@@ -230,3 +233,37 @@ async def move_to_trash(photo_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Photo {photo_id} moved to trash"}
 
+@router.post("/{photo_id}/tags")
+def add_tag_to_photo(photo_id: str, tag_name: str, db: Session = Depends(get_db)):
+    photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="nie znaleziono zdjecia")
+
+    clean_tag_name = tag_name.strip().lower()
+
+    tag = db.query(models.Tag).filter(models.Tag.name == clean_tag_name).first() 
+    if not tag:
+        tag = models.Tag(name=clean_tag_name)
+        db.add(tag)
+        db.flush()
+
+    if tag not in photo.tags:
+        photo.tags.append(tag)
+        db.commit()
+
+    return {"message": "Dodano tag", "tag": tag.name}
+
+@router.delete("/{photo_id}/tags/{tag_name}")
+def remove_tag_from_photo(photo_id: str, tag_name: str, db: Session = Depends(get_db)):
+    photo = db.query(models.Photo).filter(models.Photo.id == photo_id).first()
+    
+    if not photo:
+            raise HTTPException(status_code=404, detail="nie znaleziono zdjecia")
+    clean_tag_name = tag_name.strip().lower()
+    tag = db.query(models.Tag).filter(models.Tag.name == clean_tag_name).first()
+
+    if tag and tag in photo.tags:
+        photo.tags.remove(tag)
+        db.commit()
+
+    return {"message": "usunięto tag"}

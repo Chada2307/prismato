@@ -3,6 +3,13 @@ from typing import List, Optional
 from datetime import datetime
 import uuid
 
+class TagBase(BaseModel):
+    id: uuid.UUID
+    name: str
+
+    class Config:
+        from_attributes = True
+
 class PhotoResponse(BaseModel):
     id: uuid.UUID
     captured_at: Optional[datetime]
@@ -10,6 +17,7 @@ class PhotoResponse(BaseModel):
     thumbnail_url: str
     original_url: str
     is_favorite: bool
+    tags: List[TagBase] = []
     
     class Config:
         from_attributes = True

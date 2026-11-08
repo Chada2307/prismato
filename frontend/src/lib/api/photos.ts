@@ -65,3 +65,19 @@ export async function nukeGallery() {
     if (!res.ok) throw new Error('Błąd podczas czyszczenia galerii');
     return res.json();
 }
+
+export async function addTagToPhoto(photoId: string, tagName: string) {
+    const res = await fetch(`${PUBLIC_API_URL}/photos/${photoId}/tags?tag_name=${encodeURIComponent(tagName)}`, {
+        method: 'POST'
+    });
+    if (!res.ok) throw new Error('Nie udało się dodać tagu');
+    return res.json();
+}
+
+export async function removeTagFromPhoto(photoId: string, tagName: string) {
+    const res = await fetch(`${PUBLIC_API_URL}/photos/${photoId}/tags/${encodeURIComponent(tagName)}`, {
+        method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Nie udało się usunąć tagu');
+    return res.json();
+}

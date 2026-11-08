@@ -14,6 +14,11 @@
 
     const selection = new SelectionState();
 
+    type Tag = {
+        id: string;
+        name: string;
+    };
+    
     type Photo = {
         id: string;
         thumbnail_url: string;
@@ -21,6 +26,7 @@
         captured_at: string;
         camera_model: string;
         is_favorite: boolean;
+        tags: Tag[];
     };
 
     let { data } = $props();

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from typing import List
 import uuid
 import models
@@ -65,7 +65,13 @@ def add_photos_to_album(album_id: uuid.UUID, payload: schemas.AlbumAddPhotos, db
 
 @router.get("/{album_id}/photos")
 def get_album_photos(album_id: uuid.UUID, db: Session = Depends(get_db)):
-    album = db.query(models.Album).filter(models.Album.id == album_id).first()
+    
+    album = (
+        db.query(models.Album)
+        .filter(models.Album.id == album_id)
+        .options(selectinload(models.Album.photos).selectinload(models.Photo.tags))
+        .first()
+    )
     if not album:
         raise HTTPException(status_code=404, detail="Nie znaleziono albumu")
 
@@ -79,7 +85,8 @@ def get_album_photos(album_id: uuid.UUID, db: Session = Depends(get_db)):
             "camera_model": photo.camera_model,
             "thumbnail_url": f"/photos/{photo.id}/thumbnail",
             "original_url": f"/photos/{photo.id}/original",
-            "is_favorite": photo.is_favorite
+            "is_favorite": photo.is_favorite,
+            "tags": [{"id": tag.id, "name": tag.name} for tag in photo.tags]
         })
     return result
 

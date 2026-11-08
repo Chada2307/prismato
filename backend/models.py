@@ -14,6 +14,20 @@ photo_album_assoc = Table(
     Column('album_id', UUID(as_uuid=True), ForeignKey('albums.id'), primary_key=True)
 )
 
+photo_tags = Table(
+    'photo_tags',
+    Base.metadata,
+    Column('photo_id', UUID(as_uuid=True), ForeignKey('photos.id', ondelete="CASCADE"), primary_key=True),
+    Column('tag_id', UUID(as_uuid=True), ForeignKey('tags.id', ondelete="CASCADE"), primary_key=True)
+)
+
+class Tag(Base):
+    __tablename__ = "tags"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, unique=True, index=True, nullable=False)
+    photos = relationship("Photo", secondary=photo_tags, back_populates="tags")
+
 class BulkDeleteRequest(BaseModel):
     photo_ids: List[uuid.UUID]
 
@@ -46,7 +60,8 @@ class Photo(Base):
     is_deleted = Column(Boolean, default = False, index=True)
     is_favorite = Column(Boolean, default = False, index=True)
     deleted_at = Column(DateTime, nullable = True)
-
+    
     owner = relationship("User")
     albums = relationship("Album", secondary=photo_album_assoc, back_populates="photos")
+    tags = relationship("Tag", secondary=photo_tags, back_populates="photos")
 

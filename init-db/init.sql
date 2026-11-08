@@ -48,12 +48,21 @@ CREATE TABLE IF NOT EXISTS photo_album(
     album_id UUID REFERENCES albums(id) ON DELETE CASCADE,
     PRIMARY KEY (photo_id, album_id)
 );
+CREATE TABLE IF NOT EXISTS tags (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name varchar(100) UNIQUE NOT NULL
+);
 
-
+CREATE TABLE IF NOT EXISTS photo_tags (
+    photo_id uuid REFERENCES photos(id) ON DELETE CASCADE,
+    tag_id uuid REFERENCES tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (photo_id, tag_id)
+);
 
 CREATE INDEX idx_photos_captured_at ON photos (captured_at DESC);
 CREATE INDEX idx_photos_owner ON photos (owner_id);
 CREATE INDEX idx_faces_photos ON faces (photo_id);
 CREATE INDEX idx_faces_embedding ON faces USING hnsw (embedding vector_cosine_ops);
 
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags (name);
 CREATE INDEX IF NOT EXISTS idx_albums_title ON albums(title);

@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { X, ChevronLeft, ChevronRight, Heart, Trash2, FolderPlus, Loader2 } from 'lucide-svelte';
+    import { X, ChevronLeft, ChevronRight, Heart, Trash2, FolderPlus, Loader2, Tag as TagIcon } from 'lucide-svelte';
+    import { addTagToPhoto, removeTagFromPhoto } from '$lib/api/photos';
     import { PUBLIC_API_URL } from '$env/static/public';
 
    let { 
@@ -23,11 +24,48 @@
 
     let currentPhoto = $derived(photos[currentIndex]);
 
+    let newTagInput = $state('');
+    let isTagging = $state(false);
+
     let originalUrl = $derived(
         currentPhoto.original_url
         ? (currentPhoto.original_url.startsWith('http') ? currentPhoto.original_url : `${PUBLIC_API_URL}${currentPhoto.original_url}`)
         : (currentPhoto.thumbnail_url.startsWith('http') ? currentPhoto.thumbnail_url : `${PUBLIC_API_URL}${currentPhoto.thumbnail_url}`)
     );
+
+    async function handleAddTag(e: KeyboardEvent) {
+        if (e.key !== 'Enter' || !newTagInput.trim()) return;
+        
+        const tagName = newTagInput.trim().toLowerCase();
+        
+        if (currentPhoto.tags?.some(t => t.name === tagName)) {
+            newTagInput = '';
+            return;
+        }
+
+        isTagging = true;
+        try {
+            const data = await addTagToPhoto(currentPhoto.id, tagName);
+            if (!currentPhoto.tags) currentPhoto.tags = [];
+            currentPhoto.tags.push({ id: 'temp-id', name: data.tag }); 
+            newTagInput = '';
+        } catch (err) {
+            console.error(err);
+            alert('Błąd podczas dodawania tagu');
+        } finally {
+            isTagging = false;
+        }
+    }
+
+    async function handleRemoveTag(tagName: string) {
+        try {
+            await removeTagFromPhoto(currentPhoto.id, tagName);
+    
+            currentPhoto.tags = currentPhoto.tags.filter(t => t.name !== tagName);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     function next(){
         if (currentIndex < photos.length - 1){
@@ -125,6 +163,44 @@
         />
     </div>
     
+    <div 
+        class="absolute bottom-24 right-6 z-50 w-72 sm:right-12 sm:w-80 rounded-2xl bg-black/60 p-5 backdrop-blur-md border border-white/10 shadow-2xl pointer-events-auto transition-all" 
+        onclick={(e) => e.stopPropagation()}
+    >
+        <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-2 text-sm font-semibold text-white/90">
+                <TagIcon size={16} />
+                <span>Etykiety ({currentPhoto.tags?.length || 0})</span>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                {#each currentPhoto.tags || [] as tag (tag.name)}
+                    <div class="group flex items-center gap-1 rounded-full bg-white/20 pl-3 pr-1 py-1 text-xs font-medium text-white transition-colors hover:bg-white/30">
+                        <span>{tag.name}</span>
+                        <button 
+                            onclick={() => handleRemoveTag(tag.name)}
+                            class="rounded-full p-1 opacity-50 transition-all hover:bg-red-500 hover:text-white hover:opacity-100"
+                            title="Usuń tag"
+                        >
+                            <X size={12} />
+                        </button>
+                    </div>
+                {/each}
+            </div>
+
+            <div class="relative mt-2">
+                <input 
+                    type="text" 
+                    bind:value={newTagInput}
+                    onkeydown={handleAddTag}
+                    disabled={isTagging}
+                    placeholder="Wpisz tag i wciśnij Enter..."
+                    class="w-full rounded-lg border border-white/20 bg-black/40 px-3 py-2 text-sm text-white placeholder-white/40 outline-none transition-all focus:border-brand focus:bg-black/60 focus:ring-1 focus:ring-brand disabled:opacity-50"
+                />
+            </div>
+        </div>
+    </div>
+
     <div class="absolute bottom-0 left-0 right-0 flex justify-center bg-gradient-to-t from-black/80 to-transparent p-8 text-white pointer-events-none">
         <div class="text-center">
             <p class="font-medium text-lg">{currentPhoto.camera_model || 'Nieznany aparat'}</p>
